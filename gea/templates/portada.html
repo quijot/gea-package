@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}GEA | Gesti&oacute;n de Expedientes de Agrimensores{% endblock %}
+
+{% block content %}
+
+<header id="grp-content-title">
+  <header><h1>Administración de expedientes</h1></header>
+</header>
+
+<div class="grp-module" id="app_auth">
+  <h2>ADMIN</h2>
+  <div class="grp-row" id="model-group">
+    <a href="/admin/"><strong>Administración de expedientes</strong></a>
+  </div>
+</div>
+
+<header id="grp-content-title">
+  <header><h1>Tareas comunes</h1></header>
+</header>
+
+<div class="grp-module" id="app_auth">
+  <h2>GENERAR NOTAS</h2>
+  <div class="grp-row" id="model-group">
+    <a href="/gea/solicitud"><strong>Solicitud de Inscripción para SCIT</strong></a>
+<!--    <ul class="grp-actions">
+      <li class="grp-add-link"><a href="/admin/auth/group/add/">Agregar</a></li>
+      <li class="grp-change-link"><a href="/admin/auth/group/">Modificar</a></li>
+    </ul>-->
+  </div>
+  <div class="grp-row" id="model-group">
+    <a href="/gea/visacion"><strong>Visación Comunal / Municipal</strong></a>
+  </div>
+</div>
+
+<div class="grp-module" id="app_auth">
+  <h2>BUSCAR</h2>
+  <div class="grp-row" id="model-group">
+    <a href="/gea/plano"><strong>Plano x Nº de Inscripción</strong></a>
+  </div>
+  <div class="grp-row" id="model-group">
+    <a href="/gea/set"><strong>Set de Datos x Nº de Partida de Impuesto Inmubiliario</strong></a>
+  </div>
+  <div class="grp-row" id="model-group">
+    <a href="/gea/catastro"><strong>Expedientes x Catastros Locales</strong></a>
+  </div>
+</div>
+
+<div class="grp-module" id="app_auth">
+  <h2>DÍGITO VERIFICADOR API</h2>
+  <div class="grp-row" id="model-group">
+    <a href="/gea/dvapi"><strong>Calcular D&iacute;gito Verificador</strong></a>
+  </div>
+</div>
+{% endblock %}

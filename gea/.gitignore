@@ -1,7 +1,0 @@
-*.log
-*.pot
-*.pyc
-local_settings.py
-
-backup/db/*.gz
-bakcup/files/*.gz

@@ -1,5 +1,7 @@
 recursive-include docs *
+recursive-include gea/backup/db
 recursive-include gea/templates *.html
+include requirements.txt
 include AUTHORS
 include LICENSE
 include README.rst

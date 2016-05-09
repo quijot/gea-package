@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='gea',
-    version='0.1.1',
+    version='0.2.0',
     description='Gestión de Expedientes de Agrimensores para Django.',
     author='Santiago Pestarini',
     author_email='santiago@pestarini.com.ar',
@@ -17,9 +17,9 @@ setup(
     license='LICENSE',
     long_description=open('README.rst', 'r').read(),
     install_requires=[
-        'Django == 1.8.3',
-        'django-grappelli == 2.7.1',
-        'django-nested-admin == 2.1.0',
+        'Django == 1.9.6',
+        'django-grappelli == 2.8.1',
+        'django-nested-admin == 3.0.2',
         'psycopg2',
     ],   
     classifiers=[

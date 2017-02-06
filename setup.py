@@ -12,7 +12,13 @@ setup(
     url='http://pypi.python.org/pypi/gea/',
     packages=['gea'],
     package_data={
-        'gea': ['templates/*','templates/*/*', 'templatetags/*', 'static/*/*'],
+        'gea': [
+            'migrations/*',
+            'static/*/*',
+            'templates/*',
+            'templates/*/*',
+            'templatetags/*',
+        ],
     },
     license='LICENSE',
     long_description=open('README.rst', 'r').read(),

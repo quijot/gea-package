@@ -5,14 +5,14 @@ from setuptools import setup
 
 setup(
     name='gea',
-    version='0.2.7.3',
+    version='0.2.8',
     description='Gestión de Expedientes de Agrimensores para Django.',
     author='Santiago Pestarini',
     author_email='santiago@pestarini.com.ar',
     url='http://pypi.python.org/pypi/gea/',
     packages=['gea'],
     package_data={
-        'gea': ['templates/*/*', 'templatetags/*', 'static/*/*'],
+        'gea': ['templates/*','templates/*/*', 'templatetags/*', 'static/*/*'],
     },
     license='LICENSE',
     long_description=open('README.rst', 'r').read(),

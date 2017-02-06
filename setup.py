@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='gea',
-    version='0.2.7.2',
+    version='0.2.7.3',
     description='Gestión de Expedientes de Agrimensores para Django.',
     author='Santiago Pestarini',
     author_email='santiago@pestarini.com.ar',

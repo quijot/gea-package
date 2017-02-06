@@ -1,7 +1,0 @@
-recursive-include gea/static
-recursive-include gea/templates
-recursive-include gea/templatetags
-include requirements.txt
-include AUTHORS
-include LICENSE
-include README.rst

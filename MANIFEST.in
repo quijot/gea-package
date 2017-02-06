@@ -1,6 +1,6 @@
-recursive-include docs *
-recursive-include gea/backup/db
-recursive-include gea/templates *.html
+recursive-include gea/static
+recursive-include gea/templates
+recursive-include gea/templatetags
 include requirements.txt
 include AUTHORS
 include LICENSE

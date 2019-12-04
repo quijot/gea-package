@@ -24,7 +24,7 @@ setup(
     license='LICENSE',
     long_description=open('README.rst', 'r').read(),
     install_requires=[
-        'Django == 1.8.9',
+        'Django == 1.11.23',
         'django-grappelli == 2.7.3',
         'django-filebrowser == 3.6.4',
         'django-nested-admin == 2.1.8',

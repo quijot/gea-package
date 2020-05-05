@@ -229,7 +229,7 @@ class Profesional(models.Model):
     web = models.URLField(max_length=50, blank=True)
     email = models.EmailField(max_length=50, blank=True)
     cuit_cuil = models.CharField(
-        max_length=14, blank=True, verbose_name="CUIT/CUIL/CDI",
+        max_length=14, blank=True, verbose_name="CUIT/CUIL",
     )
     habilitado = models.BooleanField(default=True)
     jubilado = models.BooleanField(default=False)

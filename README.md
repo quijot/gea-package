@@ -141,4 +141,4 @@ e ingresamos a [http://127.0.0.1:8000/](http://127.0.0.1:8000/)... con los datos
 
 ## LICENCIA
 
-[BSD](https://raw.github.com/quijot/gea/master/LICENSE)
+[MIT](LICENSE)

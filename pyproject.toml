@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gea-package"
+name = "gea"
 version = "0.2.29"
 description = "Gestión de Expedientes de Agrimensores para Django."
 authors = ["Santiago Pestarini <santiagonob@gmail.com>"]

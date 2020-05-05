@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gea"
-version = "0.2.29"
+version = "0.2.31"
 description = "Gestión de Expedientes de Agrimensores para Django."
 authors = ["Santiago Pestarini <santiagonob@gmail.com>"]
 license = "MIT"
@@ -19,8 +19,8 @@ pytest = "^5.2"
 flake8 = "^3.7.9"
 black = "^19.10b0"
 ipython = "^7.13.0"
+pydot = "^1.4.1"
 psycopg2 = "^2.8.5"
-pygraphviz = "^1.5"
 
 [tool.black]
 line-length = 88

@@ -17,8 +17,8 @@ class Antecedente(models.Model):
     )
     inscripcion_numero = models.IntegerField()
     duplicado = models.BooleanField(default=False)
-    observacion = models.CharField(max_length=255)
-    plano_ruta = models.URLField(max_length=100)
+    observacion = models.CharField(max_length=255, blank=True)
+    plano_ruta = models.URLField(max_length=100, blank=True)
     # plano = FileBrowseField(
     #     "Enlace al plano", max_length=200, directory="planos/", extensions=[".pdf"],
     # )
@@ -29,11 +29,11 @@ class Catastro(models.Model):
         "ExpedientePartida", on_delete=models.CASCADE
     )
     zona = models.ForeignKey("Zona", on_delete=models.CASCADE)
-    seccion = models.CharField(max_length=10)
-    poligono = models.CharField(max_length=10)
-    manzana = models.CharField(max_length=10)
+    seccion = models.CharField(max_length=10, blank=True)
+    poligono = models.CharField(max_length=10, blank=True)
+    manzana = models.CharField(max_length=10, blank=True)
     parcela = models.CharField(max_length=10)
-    subparcela = models.CharField(max_length=10)
+    subparcela = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
         if self.zona in (1, 2, 3):

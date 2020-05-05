@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "gea-package"
+version = "0.2.29"
+description = "Gestión de Expedientes de Agrimensores para Django."
+authors = ["Santiago Pestarini <santiagonob@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/quijot/gea-package"
+packages = [{ include = "gea" }]
+
+[tool.poetry.dependencies]
+python = ">=3.6,<4"
+django = "^3.0.6"
+django-nested-admin = "^3.3.0"
+django-extensions = "^2.2.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+flake8 = "^3.7.9"
+black = "^19.10b0"
+ipython = "^7.13.0"
+psycopg2 = "^2.8.5"
+pygraphviz = "^1.5"
+
+[tool.black]
+line-length = 88
+target-version = ["py36"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

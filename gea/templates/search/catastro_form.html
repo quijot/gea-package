@@ -1,0 +1,20 @@
+{% extends "menu.html" %}
+
+{# set menu in active mode #}
+{% block nav-search-cl %} class="active"{% endblock %}
+
+{% block title %}GEA | Buscar en Catastros Locales{% endblock %}
+
+{% block content %}
+<form class="form-horizontal col-lg-6" method="post">{% csrf_token %}
+  <legend><i class="fa fa-map-signs"></i> Buscar en Catastros Locales</legend>
+  <fieldset>
+    <div class="form-group">
+      <table class="table table-condensed table-hover">
+      {{ form.as_table }}
+      </table>
+      <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-search"></i> Buscar</button>
+    </div>
+  </fieldset>
+</form>
+{% endblock %}

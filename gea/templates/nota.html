@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+    {% block stylesheets %}
+    <style>
+     body { max-width:90%; margin: 1em 0 0 4em; font-size: 11pt }
+     .encabezado, .encabezado a { color: #999 }
+     p { text-align: justify }
+     p.sangria { text-indent: 20% }
+     a { color: black; text-decoration: none; border-bottom: 1px solid black }
+     a:visited { text-decoration:none }
+     a:hover { color: #4fb2d3 }
+     table { border: no-border; border-collapse: collapse; width: 100% }
+     th, td { border-bottom: 1px solid black }
+    </style>
+    {% endblock %}
+  </head>
+  <body>
+    {% block encabezado %}
+    <div class="encabezado">
+      <table>
+        <tbody>
+          <tr>
+            <td colspan={{ e.expedienteprofesional_set.count }} style="text-align: center;">
+              <span style="font-size:large; margin: auto;">
+                <strong><em>Estudio de Agrimensura &quot;Enrique A. Pestarini&quot;</em></strong>
+              </span><br>
+              <span style="margin: auto;">
+                <em>(03404) 431206 – San Martín 430, 1&ordm; piso – 2252 Gálvez – Santa Fe</em><br>
+                <a href="http://pestarini.com.ar"><em>www.pestarini.com.ar</em></a>
+              </span>
+            </td>
+          </tr>
+          <tr>
+          {% if e.expedienteprofesional_set %}
+            {% for ep in e.expedienteprofesional_set.all %}
+            <td style="border: none; vertical-align: top; padding: 3px; {% if forloop.last %} text-align: right{% endif %}">
+              <strong>{{ ep.profesional.nombres }} {{ ep.profesional.apellidos }}</strong><br>
+              <em>{{ ep.profesional.titulo }} – ICoPA Nº {{ ep.profesional.icopa }}</em><br>
+              <a href="mailto:{{ ep.profesional.email }}">{{ ep.profesional.email }}</a>
+            </td>
+            {% endfor %}
+          {% endif %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% endblock %}
+    {% block content %}
+        {{ content }}
+    {% endblock %}
+  </body>
+</html>

@@ -1,7 +1,12 @@
+import unicodedata
+
 from django.contrib import admin
 from django.db import models
+from django.db.models import Q
 from django.forms import TextInput
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
 from nested_admin import NestedModelAdmin, NestedStackedInline, NestedTabularInline
 
 from .models import (
@@ -33,9 +38,74 @@ from .models import (
 # Custom Filters
 # -----------------------------------------------------------------------------
 
+
+# Personas
+class CantidadDeExpedientesPorPersonaFilter(admin.SimpleListFilter):
+    title = _("cantidad de expedientes por persona")
+    parameter_name = "expedientes"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("0", _("Ninguno")),
+            ("1", _("1")),
+            ("2", _("2")),
+            ("3", _("3")),
+            ("4+", _("4 o +")),
+        )
+
+    def queryset(self, request, queryset):
+        qs = queryset.annotate(entry_count=models.Count("expedientepersona"))
+        if self.value() == "0":
+            qs = qs.filter(entry_count=0)
+            return qs
+        if self.value() == "1":
+            qs = qs.filter(entry_count=1)
+            return qs
+        if self.value() == "2":
+            qs = qs.filter(entry_count=2)
+            return qs
+        if self.value() == "3":
+            qs = qs.filter(entry_count=3)
+            return qs
+        if self.value() == "4+":
+            qs = qs.filter(entry_count__gt=3)
+            return qs
+
+
+# Objetos
+class CantidadDeExpedientesPorObjetoFilter(admin.SimpleListFilter):
+    title = _("cantidad de expedientes por objeto")
+    parameter_name = "expedientes"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("0", _("Ninguno")),
+            ("10", _("entre 1 y 10")),
+            ("50", _("entre 10 y 50")),
+            ("100", _("entre 50 y 100")),
+            ("100+", _("100 o +")),
+        )
+
+    def queryset(self, request, queryset):
+        qs = queryset.annotate(entry_count=models.Count("expediente"))
+        if self.value() == "0":
+            qs = qs.filter(entry_count=0)
+            return qs
+        if self.value() == "10":
+            qs = qs.filter(entry_count__gte=1).filter(entry_count__lt=10)
+            return qs
+        if self.value() == "50":
+            qs = qs.filter(entry_count__gte=10).filter(entry_count__lt=50)
+            return qs
+        if self.value() == "100":
+            qs = qs.filter(entry_count__gte=50).filter(entry_count__lt=100)
+            return qs
+        if self.value() == "100+":
+            qs = qs.filter(entry_count__gte=100)
+            return qs
+
+
 # Expedientes
-
-
 class InscriptoFilter(admin.SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
@@ -172,9 +242,9 @@ class TieneSetFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "si":
-            return queryset.exclude(set_ruta__isnull=True)
+            return queryset.exclude(set_ruta__isnull=True, set_ruta__exact="")
         if self.value() == "no":
-            return queryset.exclude(set_ruta__isnull=False)
+            return queryset.filter(Q(set_ruta__isnull=True) | Q(set_ruta__exact=""))
 
 
 # -----------------------------------------------------------------------------
@@ -182,8 +252,6 @@ class TieneSetFilter(admin.SimpleListFilter):
 # -----------------------------------------------------------------------------
 
 # Expedientes
-
-
 class CatastroLocalInline(NestedTabularInline):
     classes = ("extrapretty", "collapse")
     model = CatastroLocal
@@ -235,27 +303,6 @@ class AntecedenteInline(NestedTabularInline):
 # -----------------------------------------------------------------------------
 # Admin
 # -----------------------------------------------------------------------------
-admin.site.register(Antecedente)
-admin.site.register(Catastro)
-admin.site.register(CatastroLocal)
-admin.site.register(Circunscripcion)
-admin.site.register(Comprobante)
-admin.site.register(Dp)
-admin.site.register(Ds)
-admin.site.register(ExpedienteLugar)
-admin.site.register(ExpedientePartida)
-admin.site.register(ExpedientePersona)
-admin.site.register(Lugar)
-admin.site.register(Objeto)
-admin.site.register(Pago)
-admin.site.register(Partida)
-admin.site.register(PartidaDominio)
-admin.site.register(Persona)
-admin.site.register(Presupuesto)
-admin.site.register(Profesional)
-admin.site.register(Sd)
-admin.site.register(Titulo)
-admin.site.register(Zona)
 
 
 @admin.register(Expediente)
@@ -377,10 +424,382 @@ class ExpedienteAdmin(NestedModelAdmin):
 
     def ver_plano(self, obj):
         if obj.plano_ruta != "" and obj.plano_ruta is not None:
-            return '<a href="%s">%s</a>' % (obj.plano_ruta, obj.inscripcion_numero)
+            return mark_safe(f'<a href="{obj.plano_ruta}">{obj.inscripcion_numero}</a>')
         else:
             return None
 
-    ver_plano.allow_tags = True
     ver_plano.short_description = "Ver plano"
     ver_plano.admin_order_field = "plano_ruta"
+
+
+def strip_accents(s):
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
+    )
+
+
+@admin.register(Antecedente)
+class AntecedenteAdmin(admin.ModelAdmin):
+    list_filter = [
+        "duplicado",
+        TienePlanoFilter,
+    ]
+    list_display = (
+        "expediente",
+        "expediente_modificado",
+        "inscripcion_numero",
+        "duplicado",
+        "observacion",
+    )
+    list_editable = (
+        # 'expediente_modificado',
+        # 'inscripcion_numero',
+        # 'duplicado',
+        # 'observacion',
+        # 'plano_ruta'
+    )
+    search_fields = [
+        "expediente__id",
+        "expediente_modificado__id",
+        "inscripcion_numero",
+        "duplicado",
+        "observacion",
+    ]
+    actions_on_bottom = True
+    list_per_page = 20
+    save_on_top = True
+    ordering = ["expediente", "-expediente_modificado", "inscripcion_numero"]
+
+    def ver_plano(self, obj):
+        if obj.plano_ruta != "" and obj.plano_ruta is not None:
+            return mark_safe(f'<a href="{obj.plano_ruta}">{obj.inscripcion_numero}</a>')
+        else:
+            return None
+
+    ver_plano.short_description = "Ver plano"
+    ver_plano.admin_order_field = "inscripcion_plano"
+
+
+@admin.register(Catastro)
+class CatastroAdmin(admin.ModelAdmin):
+    list_filter = ["zona", "seccion", "poligono", "manzana", "parcela", "subparcela"]
+    search_fields = ["zona", "seccion", "poligono", "manzana", "parcela", "subparcela"]
+    actions_on_bottom = True
+    list_per_page = 20
+    save_on_top = True
+    ordering = ["zona", "seccion", "poligono", "manzana", "parcela", "subparcela"]
+
+
+@admin.register(CatastroLocal)
+class CatastroLocalAdmin(NestedModelAdmin):
+    list_display = (
+        "seccion",
+        "manzana",
+        "parcela",
+        "subparcela",
+        "suburbana",
+        "poligono",
+    )
+    list_filter = ["seccion", "manzana"]
+    search_fields = [
+        "seccion",
+        "manzana",
+        "parcela",
+        "subparcela",
+        "suburbana",
+        "poligono",
+        "expediente_lugar__expediente__id",
+        "expediente_lugar__lugar__nombre",
+    ]
+    actions_on_bottom = True
+    list_per_page = 20
+    save_on_top = True
+    ordering = ["seccion", "manzana", "parcela", "subparcela", "suburbana", "poligono"]
+
+
+@admin.register(Circunscripcion)
+class CircunscripcionAdmin(admin.ModelAdmin):
+    list_display = ("id", "nombre", "orden")
+    # list_editable = ('nombre', 'orden')
+    search_fields = ["id", "nombre", "orden"]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+@admin.register(Dp)
+class DpAdmin(admin.ModelAdmin):
+    list_display = (
+        "dp",
+        "nombre",
+        "habitantes",
+        "superficie",
+        "cabecera",
+        "circunscripcion",
+    )
+    list_filter = ["circunscripcion", "circunscripcion__orden"]
+    search_fields = [
+        "dp",
+        "nombre",
+        "habitantes",
+        "superficie",
+        "cabecera",
+        "circunscripcion__nombre",
+    ]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+@admin.register(Ds)
+class DsAdmin(admin.ModelAdmin):
+    list_display = ("id", "dp", "distrito", "nombre")
+    list_filter = ["dp", "dp__nombre"]
+    search_fields = ["dp__nombre", "ds", "nombre"]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+@admin.register(Sd)
+class SdAdmin(admin.ModelAdmin):
+    list_display = ("id", "dp", "ds", "subdistrito", "dp_nombre", "ds_nombre", "nombre")
+    list_filter = ["ds__dp", "ds__dp__nombre", "ds", "ds__nombre"]
+    search_fields = ["ds__dp__nombre", "ds__nombre", "sd", "nombre"]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+@admin.register(ExpedientePartida)
+class ExpedientePartidaAdmin(admin.ModelAdmin):
+    inlines = [CatastroInline]
+    list_display = ("expediente", "partida", "set_ruta")
+    list_filter = [
+        TieneSetFilter,
+    ]
+    search_fields = [
+        "expediente__id",
+        "partida__pii",
+    ]
+    list_select_related = True
+    list_per_page = 20
+
+
+@admin.register(Lugar)
+class LugarAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "observacion")
+    list_editable = ("observacion",)
+    search_fields = ["nombre", "observacion"]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+@admin.register(Objeto)
+class ObjetoAdmin(admin.ModelAdmin):
+    list_filter = [CantidadDeExpedientesPorObjetoFilter]
+    search_fields = ["nombre"]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+class PartidaDominioInline(admin.TabularInline):
+    model = PartidaDominio
+    extra = 0
+
+
+@admin.register(Partida)
+class PartidaAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None, {"fields": [("sd", "pii", "subpii", "api")]}),
+    ]
+    readonly_fields = ("api",)
+    inlines = [PartidaDominioInline]
+    # list_display = ('id', 'sd', 'pii', 'subpii', 'api')
+    list_filter = ["sd__ds__dp__nombre"]
+    search_fields = ["pii", "sd__nombre", "sd__ds__nombre", "sd__ds__dp__nombre"]
+    actions_on_bottom = True
+    save_on_top = True
+    list_per_page = 20
+    list_select_related = True
+
+
+@admin.register(Persona)
+class PersonaAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    ("apellidos", "nombres"),
+                    ("apellidos_alternativos", "nombres_alternativos"),
+                ]
+            },
+        ),
+        (
+            "Contacto",
+            {"fields": [("domicilio", "lugar"), ("telefono", "celular"), "email"]},
+        ),
+        ("DNI/CUIT/CUIL/CDI", {"fields": [("tipo_doc", "documento"), "cuit_cuil"]}),
+    ]
+    inlines = [ExpedientePersonaInline]
+    list_display = (
+        "nombre_completo",
+        "domicilio",
+        "lugar",
+        "show_telefono",
+        "celular",
+        "email",
+        "show_tipo_doc",
+        "documento",
+        "show_cuit",
+    )
+    list_filter = [CantidadDeExpedientesPorPersonaFilter, "lugar"]
+    search_fields = [
+        "nombres",
+        "apellidos",
+        "nombres_alternativos",
+        "apellidos_alternativos",
+        "domicilio",
+        "telefono",
+        "celular",
+        "email",
+        "cuit_cuil",
+        "expedientepersona__expediente__id",
+    ]
+    actions_on_bottom = True
+    save_on_top = True
+
+    def show_telefono(self, obj):
+        if obj.telefono == "" or obj.telefono is None:
+            if obj.nombres == "" or obj.nombres is None:
+                return mark_safe(
+                    '<a href="http://www.paginasblancas.com.ar/es-ar/persona/{}/santa-fe">buscar</a>'.format(
+                        strip_accents(obj.apellidos.replace(".", ""))
+                    )
+                )
+            else:
+                return mark_safe(
+                    '<a href="http://www.paginasblancas.com.ar/es-ar/persona/{}-{}/santa-fe">buscar</a>'.format(
+                        strip_accents(obj.nombres.split(" ")[0].replace(".", "")),
+                        strip_accents(obj.apellidos.split(" ")[0].replace(".", "")),
+                    )
+                )
+        else:
+            return obj.telefono
+
+    show_telefono.short_description = "Telefono"
+    show_telefono.admin_order_field = "telefono"
+
+    def show_cuit(self, obj):
+        if obj.cuit_cuil == "" or obj.cuit_cuil is None:
+            nombre = strip_accents(
+                obj.nombre_completo.replace(".", "")
+                .replace(" SA", "")
+                .replace(" SRL", "")
+                .replace(" SCC", "")
+                .replace(" SACIFI", "")
+                .replace(" SH", "")
+                .replace(" HNOS", "")
+            )
+            return mark_safe(
+                f'<a href="http://www.cuitonline.com/search.php?q={nombre}">buscar</a>'
+            )
+        else:
+            cuit_cuil = obj.cuit_cuil.replace("-", "")
+            return mark_safe(
+                f'<a href="http://www.cuitonline.com/constancia/inscripcion/{cuit_cuil}">{obj.cuit_cuil}</a>'
+            )
+
+    show_cuit.short_description = "CUIT/CUIL/CDI"
+    show_cuit.admin_order_field = "cuit_cuil"
+
+
+@admin.register(Profesional)
+class ProfesionalAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None, {"fields": [("apellidos", "nombres"), ("titulo", "icopa")]}),
+        (
+            "Contacto",
+            {
+                "fields": [
+                    ("domicilio", "lugar"),
+                    ("telefono", "celular"),
+                    ("email", "web"),
+                ]
+            },
+        ),
+        ("DNI/CUIT/CUIL/CDI", {"fields": ["cuit_cuil"]}),
+        ("Otra info", {"fields": [("habilitado", "jubilado", "fallecido")]}),
+    ]
+    list_display = (
+        "nombre_completo",
+        "titulo",
+        "icopa",
+        "domicilio",
+        "lugar",
+        "telefono",
+        "celular",
+        "email",
+        "web",
+        "cuit_cuil",
+    )
+    list_filter = ["habilitado", "jubilado", "fallecido", "titulo__nombre", "lugar"]
+    search_fields = [
+        "nombres",
+        "apellidos",
+        "icopa",
+        "domicilio",
+        "telefono",
+        "celular",
+        "email",
+        "web",
+        "cuit_cuil",
+    ]
+    actions_on_bottom = True
+    save_on_top = True
+
+
+admin.site.register(Comprobante)
+
+
+class PagoInline(NestedStackedInline):
+    model = Pago
+    extra = 0
+
+
+@admin.register(Presupuesto)
+class PresupuestoAdmin(NestedModelAdmin):
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    ("expediente"),
+                    ("monto", "fecha", "porcentaje_cancelado"),
+                    ("observacion"),
+                ]
+            },
+        ),
+    ]
+    inlines = [PagoInline]
+    list_display = (
+        "expediente",
+        "monto",
+        "fecha",
+        "porcentaje_cancelado",
+        "observacion",
+    )
+    list_filter = ["expediente__id"]
+    search_fields = ["expediente__id"]
+    actions_on_bottom = True
+    date_hierarchy = "fecha"
+    list_per_page = 20
+    save_on_top = True
+
+
+admin.site.register(Titulo)
+
+
+@admin.register(Zona)
+class ZonaAdmin(admin.ModelAdmin):
+    list_display = ("id", "descripcion")
+    search_fields = ["id", "descripcion"]
+    actions_on_bottom = True
+    save_on_top = True

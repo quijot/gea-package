@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template import loader
-from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, ListView, TemplateView
 
 from .gea_vars import (
@@ -59,8 +59,10 @@ class ExpedienteAbiertoMixin(object):
         return qset
 
 
-class Home(CounterMixin, SearchMixin, ExpedienteAbiertoMixin, ListView):
-    template_name = "home/index.html"
+class Home(
+    LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin, ListView
+):
+    template_name = "index.html"
     model = Expediente
 
     def get_context_data(self, *args, **kwargs):
@@ -85,13 +87,9 @@ class Home(CounterMixin, SearchMixin, ExpedienteAbiertoMixin, ListView):
         ).order_by("-created")[:10]
         return context
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(Home, self).dispatch(*args, **kwargs)
-
 
 class About(TemplateView):
-    template_name = "home/about.html"
+    template_name = "about.html"
 
 
 class ExpedienteMixin(object):
@@ -119,8 +117,7 @@ class ExpedienteMixin(object):
         return qset
 
 
-class ExpedienteList(CounterMixin, SearchMixin, ListView):
-    template_name = "lists/expediente_list.html"
+class ExpedienteList(LoginRequiredMixin, CounterMixin, SearchMixin, ListView):
     model = Expediente
     paginate_by = 10
 
@@ -131,18 +128,9 @@ class ExpedienteList(CounterMixin, SearchMixin, ListView):
         """
         return self.request.GET.get("paginate_by", self.paginate_by)
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(ExpedienteList, self).dispatch(*args, **kwargs)
 
-
-class ExpedienteDetail(DetailView):
-    template_name = "lists/expediente_detail.html"
+class ExpedienteDetail(LoginRequiredMixin, DetailView):
     model = Expediente
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(ExpedienteDetail, self).dispatch(*args, **kwargs)
 
 
 class NombreSearchMixin(object):
@@ -168,23 +156,13 @@ class NombreSearchMixin(object):
         return q
 
 
-class PersonaList(CounterMixin, NombreSearchMixin, ListView):
-    template_name = "lists/persona_list.html"
+class PersonaList(LoginRequiredMixin, CounterMixin, NombreSearchMixin, ListView):
     model = Persona
     paginate_by = 50
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(PersonaList, self).dispatch(*args, **kwargs)
 
-
-class PersonaDetail(DetailView):
-    template_name = "lists/persona_detail.html"
+class PersonaDetail(LoginRequiredMixin, DetailView):
     model = Persona
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(PersonaDetail, self).dispatch(*args, **kwargs)
 
 
 class LugarSearchMixin(object):
@@ -241,8 +219,8 @@ class CLMixin(object):
         return qset
 
 
-class CatastroLocalList(CounterMixin, CLMixin, ListView):
-    template_name = "lists/catastros_locales.html"
+class CatastroLocalList(LoginRequiredMixin, CounterMixin, CLMixin, ListView):
+    template_name = "gea/catastros_locales.html"
     model = Expediente
     paginate_by = 10
 
@@ -280,10 +258,6 @@ class CatastroLocalList(CounterMixin, CLMixin, ListView):
             .order_by("parcela")
         )
         return context
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CatastroLocalList, self).dispatch(*args, **kwargs)
 
 
 class CaratulaForm(forms.Form):
@@ -338,7 +312,7 @@ def caratula(request):
             fmt = form.cleaned_data["fmt"]
 
             e = get_object_or_404(Expediente, id=expediente_id)
-            template = loader.get_template("tools/caratula.%s" % fmt)
+            template = loader.get_template("gea/tools/caratula.%s" % fmt)
             context = {
                 "e": e,
                 "inmueble": inmueble,
@@ -363,7 +337,7 @@ def caratula(request):
     else:
         form = CaratulaForm()  # An unbound form
 
-    return render(request, "tools/caratula_form.html", {"form": form,})
+    return render(request, "gea/tools/caratula_form.html", {"form": form,})
 
 
 class SolicitudForm(forms.Form):
@@ -410,7 +384,7 @@ def solicitud(request):
             nota = form.cleaned_data["nota"]
 
             e = get_object_or_404(Expediente, id=expediente_id)
-            template = loader.get_template("doc/solic.html")
+            template = loader.get_template("gea/doc/solic.html")
             context = {
                 "e": e,
                 "domfiscal": domicilio_fiscal,
@@ -425,7 +399,7 @@ def solicitud(request):
     else:
         form = SolicitudForm()  # An unbound form
 
-    return render(request, "doc/solic_form.html", {"form": form,})
+    return render(request, "gea/doc/solic_form.html", {"form": form,})
 
 
 class VisacionForm(forms.Form):
@@ -449,12 +423,14 @@ def visacion(request):
             e = get_object_or_404(Expediente, id=eid)
             # Redirect after POST
             return render(
-                request, "doc/visac.html", {"e": e, "sr": sr, "localidad": localidad},
+                request,
+                "gea/doc/visac.html",
+                {"e": e, "sr": sr, "localidad": localidad},
             )
     else:
         form = VisacionForm()  # An unbound form
 
-    return render(request, "doc/visac_form.html", {"form": form,})
+    return render(request, "gea/doc/visac_form.html", {"form": form,})
 
 
 #
@@ -481,7 +457,7 @@ def plano(request):
     else:
         form = PlanoForm()  # An unbound form
 
-    return render(request, "search/plano_form.html", {"form": form,})
+    return render(request, "gea/search/plano_form.html", {"form": form,})
 
 
 #
@@ -506,7 +482,7 @@ def set(request):
     else:
         form = SetForm()  # An unbound form
 
-    return render(request, "search/set_form.html", {"form": form,})
+    return render(request, "gea/search/set_form.html", {"form": form,})
 
 
 #
@@ -547,11 +523,13 @@ def dvapi(request):
             pii = form.cleaned_data["partida"]
             sub_pii = form.cleaned_data["sub_pii"]
             dv = get_dvapi(dp, ds, sd, pii, sub_pii)
-            return render(request, "tools/dvapi_form.html", {"dv": dv, "form": form},)
+            return render(
+                request, "gea/tools/dvapi_form.html", {"dv": dv, "form": form},
+            )
     else:
         form = DVAPIForm()  # An unbound form
 
-    return render(request, "tools/dvapi_form.html", {"form": form,})
+    return render(request, "gea/tools/dvapi_form.html", {"form": form,})
 
 
 #
@@ -578,7 +556,7 @@ def sie(request):
     else:
         form = SIEForm()  # An unbound form
 
-    return render(request, "tools/sie_form.html", {"form": form,})
+    return render(request, "gea/tools/sie_form.html", {"form": form,})
 
 
 #
@@ -611,29 +589,25 @@ def catastro(request):
             manzana = form.cleaned_data["manzana"]
             parcela = form.cleaned_data["parcela"]
 
-            filtro = u"?"
+            filtro = "?"
             if lugar is not None:
-                filtro = u"%s%s%s" % (
-                    filtro,
-                    u"&expedientelugar__lugar__nombre=",
-                    lugar,
-                )
+                filtro = "%s%s%s" % (filtro, "&expedientelugar__lugar__nombre=", lugar,)
             if seccion != "":
-                filtro = u"%s%s%s" % (
+                filtro = "%s%s%s" % (
                     filtro,
-                    u"&expedientelugar__catastrolocal__seccion=",
+                    "&expedientelugar__catastrolocal__seccion=",
                     seccion,
                 )
             if manzana != "":
-                filtro = u"%s%s%s" % (
+                filtro = "%s%s%s" % (
                     filtro,
-                    u"&expedientelugar__catastrolocal__manzana=",
+                    "&expedientelugar__catastrolocal__manzana=",
                     manzana,
                 )
             if parcela != "":
-                filtro = u"%s%s%s" % (
+                filtro = "%s%s%s" % (
                     filtro,
-                    u"&expedientelugar__catastrolocal__parcela=",
+                    "&expedientelugar__catastrolocal__parcela=",
                     parcela,
                 )
             # Redirect after POST
@@ -641,7 +615,7 @@ def catastro(request):
     else:
         form = CLForm()  # An unbound form
 
-    return render(request, "search/catastro_form.html", {"form": form,})
+    return render(request, "gea/search/catastro_form.html", {"form": form,})
 
 
 # #####
@@ -704,5 +678,5 @@ def catastro(request):
 #         )
 #     cal = QuerysetCalendar(e, 'fecha_medicion').formatmonth(int(year),
 #                                                             int(month))
-#     return render_to_response('tools/calendar.html',
+#     return render_to_response('gea/tools/calendar.html',
 #                               {'calendar': mark_safe(cal), })

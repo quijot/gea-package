@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}GEA | Logout{% endblock %}
+
+{% block content %}
+<h2><i class="fa fa-sign-out-alt"></i> <strong>GEA</strong> Sesión cerrada</h2>
+<div class="form-horizontal col-md-offset-4 col-md-4" method="post">{% csrf_token %}
+    <p>Ingrese <a href="{% url 'login'%}">aquí para identificarse nuevamente</a></p>
+</div>
+{% endblock %}
+{% block top %}{% endblock %}

@@ -18,7 +18,7 @@ __gea__ es una aplicación web basada en [Django](https://www.djangoproject.com/
 $ pip install gea
 ```
 
-Se instalan también los ```requirements``` como Django, Grappelli y nested-admin. Si además quiere utilizar PostgreSQL para la Base de Datos, deberá instalar manualmente psycopg2.
+Se instalan también los ```requirements``` como Django y nested-admin. Si además quiere utilizar PostgreSQL para la Base de Datos, deberá instalar manualmente psycopg2.
 
 ```bash
 $ pip install psycopg2
@@ -39,11 +39,10 @@ $ # dentro de "estudio"
 $ vim estudio/settings.py
 ```
 
-- Agregar __```gea```__, ```grappelli``` (opcional)  y ```nested_admin``` a las ```INSTALLED_APPS```:
+- Agregar __```gea```__ y ```nested_admin``` a las ```INSTALLED_APPS```:
 
 ```python
 INSTALLED_APPS = (
-    'grappelli', # opcional
     ...
     'gea.apps.GeaConfig',
     'nested_admin',
@@ -89,17 +88,13 @@ $ vim estudio/urls.py
 - Importar las vistas de ```gea``` y agregar las urls de las aplicaciones que instalamos:
 
 ```python
-from django.conf.urls import include, url
-from django.contrib import admin
+from django.conf.urls import include, path
 
-from gea.views import Home
 
 urlpatterns = [
     ...
-    url(r'^grappelli/', include('grappelli.urls')), # opcional
-    url(r'^gea/', include('gea.urls')),
-    url(r'^$', Home.as_view(), name='home'),
-    url(r'^nested_admin/', include('nested_admin.urls')),
+    path('gea/', include('gea.urls')),
+    path('_nested_admin/', include('nested_admin.urls')),
 ]
 ```
 
@@ -137,7 +132,7 @@ $ # dentro de "estudio"
 $ python manage.py runserver
 ```
 
-e ingresamos a [http://127.0.0.1:8000/](http://127.0.0.1:8000/)... con los datos del superusuario que creamos antes.
+e ingresamos a [http://127.0.0.1:8000/gea/](http://127.0.0.1:8000/gea/)... con los datos del superusuario que creamos antes.
 
 ## LICENCIA
 

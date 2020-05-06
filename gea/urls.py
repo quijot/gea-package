@@ -27,10 +27,10 @@ urlpatterns = [
     path("catastros-locales/", CatastroLocalList.as_view(), name="catastros_locales"),
     # Expedientes
     path("expedientes/", ExpedienteList.as_view(), name="expedientes"),
-    path("expedientes/<int:pk>/", ExpedienteDetail.as_view(), name="expediente"),
+    path("expediente/<int:pk>/", ExpedienteDetail.as_view(), name="expediente"),
     # Personas
     path("personas/", PersonaList.as_view(), name="personas"),
-    path("personas/<int:pk>/", PersonaDetail.as_view(), name="persona"),
+    path("persona/<int:pk>/", PersonaDetail.as_view(), name="persona"),
     # Notas
     path("solicitud/", solicitud, name="solicitud"),
     path("visacion/", visacion, name="visacion"),

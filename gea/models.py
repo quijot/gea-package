@@ -36,9 +36,9 @@ class Catastro(models.Model):
     subparcela = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
-        if self.zona in (1, 2, 3):
+        if self.zona.id in (1, 2, 3):
             return f"Z:{self.zona} - S:{self.seccion} - M:{self.manzana} - P:{self.parcela}"
-        elif self.zona in (4, 5):
+        elif self.zona.id in (4, 5):
             return f"Z:{self.zona} - Pol:{self.poligono} - P:{self.parcela}"
         else:
             return ""
@@ -228,9 +228,7 @@ class Profesional(models.Model):
     celular = models.CharField(max_length=20, blank=True)
     web = models.URLField(max_length=50, blank=True)
     email = models.EmailField(max_length=50, blank=True)
-    cuit_cuil = models.CharField(
-        max_length=14, blank=True, verbose_name="CUIT/CUIL",
-    )
+    cuit_cuil = models.CharField(max_length=14, blank=True, verbose_name="CUIT/CUIL",)
     habilitado = models.BooleanField(default=True)
     jubilado = models.BooleanField(default=False)
     fallecido = models.BooleanField(default=False)
@@ -282,9 +280,23 @@ class Expediente(TimeStampedModel):
     def inscripto(self):
         return self.inscripcion_numero != 0
 
+    @property
     def propietarios_count(self):
         """Devuelve la cantidad de personas que figuran como propietarias."""
         return self.expedientepersona_set.filter(propietario=True).count()
+
+    def get_propietarios(self):
+        """Devuelve las personas que figuran como propietarias."""
+        return self.expedientepersona_set.filter(propietario=True)
+
+    @property
+    def comitentes_count(self):
+        """Devuelve la cantidad de personas que figuran como comitentes."""
+        return self.expedientepersona_set.filter(comitente=True).count()
+
+    def get_comitentes(self):
+        """Devuelve las personas que figuran como comitentes."""
+        return self.expedientepersona_set.filter(comitente=True)
 
     class Meta:
         ordering = ["-id"]
@@ -411,7 +423,9 @@ class Persona(models.Model):
     nombres_alternativos = models.CharField(max_length=100, blank=True)
     apellidos_alternativos = models.CharField(max_length=100, blank=True)
     domicilio = models.CharField(max_length=50, blank=True)
-    lugar = models.ForeignKey(Lugar, null=True, default=None, on_delete=models.SET_NULL)
+    lugar = models.ForeignKey(
+        Lugar, blank=True, null=True, default=None, on_delete=models.SET_NULL
+    )
     telefono = models.CharField(max_length=20, blank=True)
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField(max_length=50, blank=True)
@@ -424,15 +438,18 @@ class Persona(models.Model):
         verbose_name="CUIT/CUIL/CDI",
     )
     TIPO_DOC = ((0, "DNI"), (1, "LC"), (2, "LE"), (3, "Otro"))
-    tipo_doc = models.SmallIntegerField(blank=True, choices=TIPO_DOC)
-    documento = models.IntegerField(unique=True, blank=True, default=None)
+    tipo_doc = models.SmallIntegerField(
+        choices=TIPO_DOC, blank=True, null=True, default=None
+    )
+    documento = models.IntegerField(unique=True, blank=True, null=True, default=None)
 
     def get_absolute_url(self):
         return reverse("persona", kwargs={"pk": str(self.id)})
 
     @property
     def nombre_completo(self):
-        return f"{self.apellidos} {self.nombres}"
+        nombre = self.nombres if self.nombres else ""
+        return f"{nombre} {self.apellidos}".strip()
 
     def show_tipo_doc(self):
         if self.tipo_doc != "" and self.tipo_doc is not None:

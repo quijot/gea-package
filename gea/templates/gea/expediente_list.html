@@ -14,7 +14,7 @@
   <form class="navbar-form navbar-right" action="." method="get">
     <div class="form-group">
       <div class="input-group input-group-sm">
-        <span class="input-group-addon"><i class="fa fa-folder"></i> <i class="fa fa-user"></i> <i class="fa fa-thumb-tack"></i></span>
+        <span class="input-group-addon"><i class="fa fa-folder"></i> <i class="fa fa-user"></i> <i class="fa fa-thumbtack"></i></span>
         <input type="text" id="search" name="search" placeholder="Expediente/Persona/Lugar/PII/Plano/CoPA" class="form-control" value="{{ request.GET.search }}" size="35">
         <span class="input-group-btn"><button type="submit" class="btn btn-sm btn-success"><i class="fa fa-search"></i></button></span>
       </div>
@@ -47,7 +47,7 @@
     {% for e in object_list %}
     <tr>
       <td><!-- EXPEDIENTE -->
-        <a href="/admin/gea/expediente/{{ e.id }}/">{{ e.id }}</a>
+        <a href="{% url 'expediente' e.id %}">{{ e.id }}</a>
         <!--<a href="{% url 'expediente' e.id %}">{{ e.id }}</a>-->
       </td>
       <td><!-- PERSONAS -->
@@ -55,7 +55,7 @@
       {% if e.cancelado %}<span class="label label-danger">CANCELADO</span> {{ e.cancelado_por }}<br>{% endif %}
       {% if e.expedientepersona_set %}
         {% for ep in e.expedientepersona_set.all %}
-        <a href="/admin/gea/persona/{{ ep.persona.id }}/">{{ ep.persona.nombre_completo }}</a>
+        <a href="{% url 'persona' ep.persona.id %}">{{ ep.persona.nombre_completo }}</a>
           {% if ep.comitente %}<span class="label label-primary">COMITENTE</span>{% endif %}
           {% if ep.persona.telefono %}({{ ep.persona.telefono }}){% endif %}
           {% if ep.persona.celular %}({{ ep.persona.celular }}){% endif %}

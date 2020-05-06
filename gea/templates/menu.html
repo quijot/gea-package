@@ -50,13 +50,18 @@
                 <li{% block nav-tool-sie %}{% endblock %}><a href="{% url 'sie' %}"><i class="fa fa-folder"></i> Sistema de Información de Expedientes del SCIT</a></li>
               </ul>
             </li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <!-- admin -->
-            <li><a href="/admin/"><i class="fa fa-user"></i> admin</a></li>
             <!-- Acerca de -->
             <li><a href="{% url 'about' %}"><i class="fa fa-info-circle"></i> Acerca de</a></li>
           </ul>
+          {% if user.is_authenticated %}
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href=""><i class="fa fa-user"></i> {{ user.get_username }}</a></li>
+            <!-- admin -->
+            <li><a href="/admin/"><i class="fa fa-user-cog"></i> admin</a></li>
+            <!-- logout -->
+            <li><a href="{% url 'logout'%}"><i class="fa fa-sign-out-alt"></i> Salir</a></li>
+          </ul>
+          {% endif %}
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
     </nav>

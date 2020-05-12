@@ -13,7 +13,11 @@ def CapitalizePhrase(string):
 class Antecedente(models.Model):
     expediente = models.ForeignKey("Expediente", on_delete=models.CASCADE)
     expediente_modificado = models.ForeignKey(
-        "Expediente", related_name="expediente_modificado", on_delete=models.CASCADE
+        "Expediente",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="expediente_modificado",
     )
     inscripcion_numero = models.IntegerField()
     duplicado = models.BooleanField(default=False)
@@ -449,7 +453,7 @@ class Persona(models.Model):
     @property
     def nombre_completo(self):
         nombre = self.nombres if self.nombres else ""
-        return f"{nombre} {self.apellidos}".strip()
+        return f"{self.apellidos} {nombre}".strip()
 
     def show_tipo_doc(self):
         if self.tipo_doc != "" and self.tipo_doc is not None:

@@ -133,22 +133,20 @@
     </div>
     <br />
     <!-- Obejeto -->
-    <div>OBJETO:
-        {% for ep in e.expedienteobjeto_set.all %}
-        <a href="/admin/gea/objeto/{{ ep.objeto.id }}/"><strong>{{ ep.objeto.nombre|upper }}</strong></a>
+    <div>OBJETO{% if e.objetos.count > 1 %}S{% endif %}:
+        {% for objeto in e.objetos.all %}
+        <a href="/admin/gea/objeto/{{ objeto.id }}/"><strong>{{ objeto.nombre|upper }}</strong></a>
         {% endfor %}
     </div>
     <br />
     <!-- Propietarios -->
-    <div>PROPIETARIO:
-        {% for ep in e.expedientepersona_set.all %}
-            {% if ep.propietario %}
+    <div>PROPIETARIO{% if e.propietarios_count > 1 %}S{% endif %}:
+        {% for ep in e.get_propietarios %}
         <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <a href="/admin/gea/persona/{{ ep.persona.id }}/"><span style="font-size: x-large">{{ ep.persona.nombres|upper }} {{ ep.persona.apellidos }}</span></a>
-                {% if ep.sucesion %}<small>(* hoy sus sucesores)</small>{% endif %}
-                {% if ep.nuda_propiedad %}<small>(* nuda propiedad)</small>{% endif %}
-                {% if ep.partes_indivisas_propias %}<small>({{ ep.partes_indivisas_propias }}/{{ ep.partes_indivisas_total }} partes indivisas)</small>{% endif %}
-            {% endif %}
+            {% if ep.sucesion %}<small>(* hoy sus sucesores)</small>{% endif %}
+            {% if ep.nuda_propiedad %}<small>(* nuda propiedad)</small>{% endif %}
+            {% if ep.partes_indivisas_propias %}<small>({{ ep.partes_indivisas_propias }}/{{ ep.partes_indivisas_total }} partes indivisas)</small>{% endif %}
         {% endfor %}
     </div>
     <br />
@@ -207,22 +205,22 @@
     <table style="width: 100%">
         <tr>
             <td></td>
-            {% for p in e.expedienteprofesional_set.all %}
-            <td><span style="float: right; text-decoration: overline"><strong>{{ p.profesional.nombres|upper }} {{ p.profesional.apellidos|upper }}</strong></span></td>
+            {% for profesional in e.profesionales_firmantes.all %}
+            <td><span style="float: right; text-decoration: overline"><strong>{{ profesional.nombres|upper }} {{ profesional.apellidos|upper }}</strong></span></td>
             {% endfor %}
         </tr>
         <tr>
             <td></td>
-            {% for p in e.expedienteprofesional_set.all %}
-            <td><span style="float: right; font-size:smaller">{{ p.profesional.titulo|upper }} ICoPA {{ p.profesional.icopa }}</span></td>
+            {% for profesional in e.profesionales_firmantes.all %}
+            <td><span style="float: right; font-size:smaller">{{ profesional.titulo|upper }} ICoPA {{ profesional.icopa }}</span></td>
             {% endfor %}
         </tr>
         <tr>
-            {% with e.expedienteprofesional_set.all|first as p %}
-            <td>{{ p.lugar.obs|default:"GÁLVEZ"|upper }}, {{ e.fecha_plano|date:"E \D\E Y"|default:"__________"|upper }}</td>
+            {% with e.profesionales_firmantes.all|first as p %}
+            <td>{{ p.lugar.observacion|upper }}, {{ e.fecha_plano|date:"E \D\E Y"|default:"__________"|upper }}</td>
             {% endwith %}
-            {% for p in e.expedienteprofesional_set.all %}
-            <td><span style="float: right; font-size:smaller">{{ p.profesional.domicilio }} - {{ p.profesional.lugar.obs|upper }}</span></td>
+            {% for profesional in e.profesionales_firmantes.all %}
+            <td><span style="float: right; font-size:smaller">{{ profesional.domicilio }} - {{ profesional.lugar.observacion|upper }}</span></td>
             {% endfor %}
         </tr>
     </table>

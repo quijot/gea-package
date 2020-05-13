@@ -307,6 +307,7 @@ class AntecedenteInline(NestedTabularInline):
 
 @admin.register(Expediente)
 class ExpedienteAdmin(NestedModelAdmin):
+    filter_horizontal = ["objetos", "profesionales_firmantes"]
     fieldsets = [
         (
             None,
@@ -356,17 +357,17 @@ class ExpedienteAdmin(NestedModelAdmin):
     ]
     list_display = (
         "id",
-        "created",
+        # "created",
         "fecha_medicion",
-        "fecha_plano",
+        # "fecha_plano",
         "inscripcion_numero",
         "inscripcion_fecha",
         "duplicado",
         "sin_inscripcion",
         "orden_numero",
-        "orden_fecha",
+        # "orden_fecha",
         "cancelado",
-        "ver_plano",
+        # "ver_plano",
     )
     list_editable = (
         # "fecha_medicion",
@@ -381,6 +382,7 @@ class ExpedienteAdmin(NestedModelAdmin):
         # "plano_ruta",
     )
     list_filter = [
+        "profesionales_firmantes",
         InscriptoFilter,
         "duplicado",
         "sin_inscripcion",

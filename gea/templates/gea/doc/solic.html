@@ -27,10 +27,10 @@
           {% endif %}
         {% endfor %}
       {% endif %}
-      {% if e.propietarios_count > 1 %}patrocinados{% else %}patrocinado{% endif %} por
-      {% if e.expedienteprofesional_set %}
-        {% for ep in e.expedienteprofesional_set.all %}
-          {{ ep.profesional.titulo }} {{ ep.profesional.nombres }} {{ ep.profesional.apellidos }} I.Co.P.A. Nº {{ ep.profesional.icopa }},
+      patrocinado{% if e.propietarios_count > 1 %}s{% endif %} por
+      {% if e.profesionales_firmantes %}
+        {% for profesional in e.profesionales_firmantes.all %}
+          {{ profesional.titulo }} {{ profesional.nombres }} {{ profesional.apellidos }}, I.Co.P.A. Nº {{ profesional.icopa }},
         {% endfor %}
       {% endif %}
       {% if e.propietarios_count > 1 %}SOLICITAN{% else %}SOLICITA{% endif %} la inscripción del Plano

@@ -141,12 +141,12 @@
     <br />
     <!-- Propietarios -->
     <div>PROPIETARIO{% if e.propietarios_count > 1 %}S{% endif %}:
-        {% for ep in e.get_propietarios %}
+        {% for p in e.propietarios %}
         <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <a href="/admin/gea/persona/{{ ep.persona.id }}/"><span style="font-size: x-large">{{ ep.persona.nombres|upper }} {{ ep.persona.apellidos }}</span></a>
-            {% if ep.sucesion %}<small>(* hoy sus sucesores)</small>{% endif %}
-            {% if ep.nuda_propiedad %}<small>(* nuda propiedad)</small>{% endif %}
-            {% if ep.partes_indivisas_propias %}<small>({{ ep.partes_indivisas_propias }}/{{ ep.partes_indivisas_total }} partes indivisas)</small>{% endif %}
+        <a href="/admin/gea/persona/{{ p.persona.id }}/"><span style="font-size: x-large">{{ p.persona.nombres|upper }} {{ p.persona.apellidos }}</span></a>
+            {% if p.sucesion %}<small>(* hoy sus sucesores)</small>{% endif %}
+            {% if p.nuda_propiedad %}<small>(* nuda propiedad)</small>{% endif %}
+            {% if p.partes_indivisas_propias %}<small>({{ p.partes_indivisas_propias }}/{{ p.partes_indivisas_total }} partes indivisas)</small>{% endif %}
         {% endfor %}
     </div>
     <br />

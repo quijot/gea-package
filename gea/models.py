@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 
@@ -289,16 +290,29 @@ class Expediente(TimeStampedModel):
         """Devuelve la cantidad de personas que figuran como propietarias."""
         return self.expedientepersona_set.filter(propietario=True).count()
 
-    def get_propietarios(self):
+    def propietarios(self):
         """Devuelve las personas que figuran como propietarias."""
         return self.expedientepersona_set.filter(propietario=True)
+
+    @property
+    def firmantes_count(self):
+        """
+        Devuelve la cantidad de personas que deben firmar la Solicitud de Inscripción.
+        """
+        return self.firmantes().count()
+
+    def firmantes(self):
+        """Devuelve las personas que deben firmar la Solicitud de Inscripción."""
+        return self.expedientepersona_set.filter(
+            Q(propietario=True) | Q(sucesor=True)
+        ).exclude(sucesion=True)
 
     @property
     def comitentes_count(self):
         """Devuelve la cantidad de personas que figuran como comitentes."""
         return self.expedientepersona_set.filter(comitente=True).count()
 
-    def get_comitentes(self):
+    def comitentes(self):
         """Devuelve las personas que figuran como comitentes."""
         return self.expedientepersona_set.filter(comitente=True)
 
@@ -365,19 +379,24 @@ class ExpedientePersona(models.Model):
 
 class Partida(models.Model):
     sd = models.ForeignKey(
-        "Sd", db_column="sd", null=True, default=None, on_delete=models.SET_NULL
+        "Sd",
+        db_column="sd",
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
     )
     pii = models.IntegerField()
-    subpii = models.IntegerField()
+    subpii = models.IntegerField(blank=True)
     api = models.SmallIntegerField()
 
     @property
     def partida(self):
-        return f"{self.pii:06d}/{self.subpii:04d}-{self.api}"
+        return f"{self.pii:06d}/{self.subpii:04d}"
 
     @property
     def partida_completa(self):
-        return f"{self.sd}-{self.partida}"
+        return f"{self.sd}-{self.partida}-{self.api}"
 
     def calc_dvapi(self, sd, pii, subpii=0):
         coef = "9731"
@@ -390,7 +409,9 @@ class Partida(models.Model):
         return (10 - (suma % 10)) % 10
 
     def get_dvapi(self):
-        return self.calc_dvapi(int(self.sd.nomenclatura), self.pii, self.subpii)
+        if self.sd:
+            return self.calc_dvapi(int(self.sd.nomenclatura), self.pii, self.subpii)
+        return None
 
     dvapi = property(get_dvapi)
 
@@ -402,7 +423,7 @@ class Partida(models.Model):
         return self.partida
 
     def save(self, *args, **kwargs):
-        self.subpii = self.subpii if self.subpii else 0
+        self.subpii = self.subpii or 0
         self.api = self.get_dvapi()
         super().save(*args, **kwargs)
 

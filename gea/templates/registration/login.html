@@ -4,14 +4,17 @@
 {% block title %}GEA | Login{% endblock %}
 
 {% block content %}
-<h2><i class="fa fa-sign-in-alt"></i> <strong>GEA</strong> {% trans "Ingreso" %}</h2>
-  <form class="form-horizontal col-md-offset-4 col-md-4" method="post">{% csrf_token %}
+<h2><i class="fas fa-fw fa-sign-in-alt"></i> <strong>GEA</strong> {% trans "Ingreso" %}</h2>
+<form class="form-horizontal col-md-offset-4 col-md-4" method="post">{% csrf_token %}
   <fieldset>
     <div class="form-group">
       <table class="table table-condensed table-hover">
         {{ form.as_table }}
       </table>
-      <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-sign-in-alt"></i> &nbsp;{% trans "Ingresar" %}</button>
+      <button type="submit" class="btn btn-primary pull-right">
+        <i class="fas fa-fw fa-sign-in-alt"></i>
+        {% trans "Ingresar" %}
+      </button>
     </div>
   </fieldset>
 </form>

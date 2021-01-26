@@ -1,14 +1,11 @@
-{% extends "menu.html" %}
+{% extends "base.html" %}
 {% block title %}GEA | Catastos Locales{% endblock title %}
-
-{# set menu in active mode #}
-{% block nav-list-cl %} class="active"{% endblock %}
 
 {% block content %}
 {% load tags %}
 <div class="page-header">
   <h1>
-    <i class="fa fa-map-signs"></i> <a href="{% url 'catastros_locales' %}">Catastros Locales</a>
+    <i class="fas fa-fw fa-map-signs"></i> <a href="{% url 'catastros_locales' %}">Catastros Locales</a>
     {% if lugar %}<font size=4>{{ lugar }}
     - sección:<strong>{{ seccion|default:"todas" }}</strong>
     - manzana:<strong>{{ manzana|default:"todas" }}</strong>
@@ -29,7 +26,7 @@
       </button>
       <ul class="dropdown-menu">
         {% for l in lugares %}
-        <li{% if lugar == l %} class="active"{% endif %}><a href="{% url 'catastros_locales' %}?lugar={{ l }}">{{ l }}</a></li>
+        <li class="{% if lugar == l %}active{% endif %}"><a href="{% url 'catastros_locales' %}?lugar={{ l }}">{{ l }}</a></li>
         {% endfor %}
       </ul>
       <strong>{{ lugar|default:"" }}</strong>
@@ -113,7 +110,7 @@
     </tr>
     {% empty %}
     <div class="alert alert-info" role="alert">
-      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
       <span class="sr-only">Información:</span>
       No se encontraron Expedientes.
     </div>

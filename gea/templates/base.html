@@ -27,7 +27,7 @@
 
 <body>
   <!-- MENU -->
-  {% block menu %}{% endblock menu %}
+  {% block menu %}{% include "menu.html" %}{% endblock menu %}
   {% block float %}{% endblock float %}
   <div class="container">
     {% block content %}
@@ -40,13 +40,10 @@
       <div class="row clearfix">
         <div class="col-md-12 column">
           <hr>
-          {% block top %}<p class="pull-right"><i class="fa fa-chevron-up"></i> <a href="#">Arriba</a></p>
+          {% block top %}
+          <a href="#" class="pull-right"><i class="fas fa-fw fa-chevron-up"></i> Arriba</a>
           {% endblock top %}
-          <p>GEA &copy; {% now "Y" %} &middot; Todos los derechos reservados. <a rel="license"
-              href="https://creativecommons.org/licenses/by-nc-sa/3.0/" target="_blank"><img
-                alt="Creative Commons License" style="border-width:0"
-                src="https://i.creativecommons.org/l/by-nc-sa/3.0/br/80x15.png" /></a>
-          </p>
+          <p class="text-center"><strong>GEA</strong> &copy; {% now "Y" %} &mdash; Todos los derechos reservados.</p>
         </div>
       </div>
     </div><!-- footer-container -->

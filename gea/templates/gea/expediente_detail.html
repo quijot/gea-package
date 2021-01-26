@@ -1,13 +1,10 @@
-{% extends "menu.html" %}
+{% extends "base.html" %}
 {% block title %}GEA | Expediente {{ object.id }}{% endblock title %}
-
-{# set menu in active mode #}
-{% block nav-exp %} class="active"{% endblock %}
 
 {% block float %}
 <div class="well" style="position: fixed; margin: 0em 0em; transform-origin: 50% 65%; transform: rotate(-90deg);">
     <h3>
-        <i class="fa fa-folder"></i>
+        <i class="fas fa-fw fa-folder"></i>
         N&ordm; <strong>{{ expediente.id }}</strong>
     </h3>
 </div>
@@ -19,10 +16,10 @@
 <div class="col-lg-8">
     <div class="column">
         <!-- Expediente -->
-        <h1><i class="fa fa-folder"></i> Expediente N&ordm; {{ object.id }}</h1>
+        <h1><i class="fas fa-fw fa-folder"></i> Expediente N&ordm; {{ object.id }}</h1>
         <!-- Comitentes -->
         {% if object.comitentes_count %}
-        <h2><i class="fa fa-file-signature"></i> Comitente{% if object.comitentes_count > 1%}s{% endif %}:
+        <h2><i class="fas fa-fw fa-file-signature"></i> Comitente{% if object.comitentes_count > 1%}s{% endif %}:
         {% for p in object.comitentes %}
             <a href="{% url 'persona' p.persona.id %}">{{ p.persona.nombre_completo }}</a>{% if not forloop.last %},{% endif %}
         {% endfor %}
@@ -30,7 +27,7 @@
         {% endif %}
         <!-- Propietarios -->
         {% if object.propietarios_count %}
-        <h3>{% if object.propietarios_count > 1 %}<i class="fa fa-users"></i> Propietarios:{% else %}<i class="fa fa-user"></i> Propietario:{% endif %}
+        <h3>{% if object.propietarios_count > 1 %}<i class="fas fa-fw fa-users"></i> Propietarios:{% else %}<i class="fas fa-fw fa-user"></i> Propietario:{% endif %}
         {% for p in object.propietarios %}
             <a href="{% url 'persona' p.persona.id %}">{{ p.persona.nombre_completo }}</a>{% if not forloop.last %},{% endif %}
         {% endfor %}

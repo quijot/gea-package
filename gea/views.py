@@ -1,4 +1,3 @@
-from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -7,19 +6,9 @@ from django.shortcuts import get_object_or_404, render
 from django.template import loader
 from django.views.generic import DetailView, ListView, TemplateView
 
-from .gea_vars import (
-    CIRC,
-    CIRC_DEFAULT,
-    CP,
-    CP_DEFAULT,
-    LUGAR,
-    NOTA,
-    PROV,
-    PROV_DEFAULT,
-    CP_dict,
-    Lugar_dict,
-)
-from .models import CatastroLocal, Expediente, Lugar, Persona
+from . import forms
+from . import gea_vars as gv
+from . import models
 
 
 class CounterMixin(object):
@@ -51,40 +40,30 @@ class SearchMixin(object):
 class ExpedienteAbiertoMixin(object):
     def get_queryset(self):
         qset = super(ExpedienteAbiertoMixin, self).get_queryset()
-        qset = qset.filter(
-            Q(inscripcion_numero__isnull=True)
-            & Q(cancelado=False)
-            & Q(sin_inscripcion=False)
-        )[:10]
+        qset = qset.filter(Q(inscripcion_numero__isnull=True) & Q(cancelado=False) & Q(sin_inscripcion=False))[:10]
         return qset
 
 
-class Home(
-    LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin, ListView
-):
+class Home(LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin, ListView):
     template_name = "index.html"
-    model = Expediente
+    model = models.Expediente
 
     def get_context_data(self, *args, **kwargs):
         context = super(Home, self).get_context_data(*args, **kwargs)
         # last 5 inscriptos
-        context["insc_list"] = Expediente.objects.filter(
+        context["insc_list"] = models.Expediente.objects.filter(
             Q(inscripcion_numero__isnull=False) & Q(inscripcion_fecha__isnull=False)
         ).order_by("-inscripcion_fecha", "inscripcion_numero")[:5]
         # ordenes pendientes
-        context["ord_list"] = Expediente.objects.filter(
-            Q(orden_numero__isnull=False)
-            & Q(inscripcion_numero__isnull=True)
-            & Q(orden_fecha__isnull=False)
+        context["ord_list"] = models.Expediente.objects.filter(
+            Q(orden_numero__isnull=False) & Q(inscripcion_numero__isnull=True) & Q(orden_fecha__isnull=False)
         ).order_by("-orden_fecha", "orden_numero")[:5]
         # relevamientos
-        context["relev_list"] = Expediente.objects.filter(
-            fecha_medicion__isnull=False
-        ).order_by("-fecha_medicion")[:5]
+        context["relev_list"] = models.Expediente.objects.filter(fecha_medicion__isnull=False).order_by(
+            "-fecha_medicion"
+        )[:5]
         # altas
-        context["open_list"] = Expediente.objects.filter(
-            created__isnull=False
-        ).order_by("-created")[:10]
+        context["open_list"] = models.Expediente.objects.filter(created__isnull=False).order_by("-created")[:10]
         return context
 
 
@@ -97,9 +76,7 @@ class ExpedienteMixin(object):
         qset = super(ExpedienteMixin, self).get_queryset()
         q = self.request.GET.get("pendiente")
         if q:  # orden pendiente
-            qset = qset.filter(
-                Q(inscripcion_numero__isnull=q) & Q(orden_numero__isnull=not q)
-            )
+            qset = qset.filter(Q(inscripcion_numero__isnull=q) & Q(orden_numero__isnull=not q))
         q = self.request.GET.get("inscripto")
         if q:  # plano inscripto
             qset = qset.filter(inscripcion_numero__isnull=False)
@@ -118,7 +95,7 @@ class ExpedienteMixin(object):
 
 
 class ExpedienteList(LoginRequiredMixin, CounterMixin, SearchMixin, ListView):
-    model = Expediente
+    model = models.Expediente
     paginate_by = 10
 
     def get_paginate_by(self, queryset):
@@ -130,7 +107,7 @@ class ExpedienteList(LoginRequiredMixin, CounterMixin, SearchMixin, ListView):
 
 
 class ExpedienteDetail(LoginRequiredMixin, DetailView):
-    model = Expediente
+    model = models.Expediente
 
 
 class NombreSearchMixin(object):
@@ -146,23 +123,19 @@ class NombreSearchMixin(object):
                 | Q(apellidos_alternativos__icontains=w)
                 | Q(expedientepersona__expediente__id__contains=w)
                 | Q(expedientepersona__expediente__inscripcion_numero__contains=w)
-                | Q(
-                    expedientepersona__expediente__expedientepartida__partida__pii__contains=w
-                )
-                | Q(
-                    expedientepersona__expediente__expedientelugar__lugar__nombre__icontains=w
-                )
+                | Q(expedientepersona__expediente__expedientepartida__partida__pii__contains=w)
+                | Q(expedientepersona__expediente__expedientelugar__lugar__nombre__icontains=w)
             ).distinct()
         return q
 
 
 class PersonaList(LoginRequiredMixin, CounterMixin, NombreSearchMixin, ListView):
-    model = Persona
+    model = models.Persona
     paginate_by = 50
 
 
 class PersonaDetail(LoginRequiredMixin, DetailView):
-    model = Persona
+    model = models.Persona
 
 
 class LugarSearchMixin(object):
@@ -221,7 +194,7 @@ class CLMixin(object):
 
 class CatastroLocalList(LoginRequiredMixin, CounterMixin, CLMixin, ListView):
     template_name = "gea/catastros_locales.html"
-    model = Expediente
+    model = models.Expediente
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
@@ -234,24 +207,22 @@ class CatastroLocalList(LoginRequiredMixin, CounterMixin, CLMixin, ListView):
         context["manzana"] = m
         p = self.request.GET.get("parcela")
         context["parcela"] = p
-        context["lugares"] = Lugar.objects.values_list("nombre", flat=True).order_by(
-            "nombre"
-        )
+        context["lugares"] = models.Lugar.objects.values_list("nombre", flat=True).order_by("nombre")
         context["secciones"] = (
-            CatastroLocal.objects.filter(expediente_lugar__lugar__nombre=lugar)
+            models.CatastroLocal.objects.filter(expediente_lugar__lugar__nombre=lugar)
             .values_list("seccion", flat=True)
             .distinct()
             .order_by("seccion")
         )
         context["manzanas"] = (
-            CatastroLocal.objects.filter(expediente_lugar__lugar__nombre=lugar)
+            models.CatastroLocal.objects.filter(expediente_lugar__lugar__nombre=lugar)
             .filter(seccion=s)
             .values_list("manzana", flat=True)
             .distinct()
             .order_by("manzana")
         )
         context["parcelas"] = (
-            CatastroLocal.objects.filter(expediente_lugar__lugar__nombre=lugar)
+            models.CatastroLocal.objects.filter(expediente_lugar__lugar__nombre=lugar)
             .filter(Q(seccion=s) & Q(manzana=m))
             .values_list("parcela", flat=True)
             .distinct()
@@ -260,43 +231,11 @@ class CatastroLocalList(LoginRequiredMixin, CounterMixin, CLMixin, ListView):
         return context
 
 
-class CaratulaForm(forms.Form):
-    expte_nro = forms.IntegerField(
-        label="Expediente Nº",
-        widget=forms.NumberInput(attrs={"placeholder": "ej: 4300"}),
-    )
-    inmueble = forms.CharField(
-        widget=forms.Textarea(attrs={"placeholder": "ej: Una fracción de terreno..."}),
-        required=False,
-    )
-    matricula = forms.IntegerField(required=False)
-    tomo = forms.IntegerField(required=False)
-    par = forms.BooleanField(required=False)
-    folio = forms.IntegerField(required=False)
-    numero = forms.IntegerField(label="Número", required=False)
-    fecha = forms.DateField(required=False)
-    obs = forms.CharField(
-        label="Observaciones",
-        widget=forms.Textarea(
-            attrs={
-                "placeholder": "ej: Modifica el Lote Nº 1 del \
-                              Plano Nº 23.456. Etc."
-            }
-        ),
-        required=False,
-    )
-    FORMAT_CHOICES = (
-        ("html", "HTML"),
-        ("dxf", "DXF"),
-    )
-    fmt = forms.ChoiceField(label="Formato de salida", choices=FORMAT_CHOICES)
-
-
 @login_required
 def caratula(request):
     if request.method == "POST":  # If the form has been submitted...
         # CaratulaForm was defined in the previous section
-        form = CaratulaForm(request.POST)  # A form bound to the POST data
+        form = forms.CaratulaForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             # Process the data in form.cleaned_data
             #
@@ -311,7 +250,7 @@ def caratula(request):
             obs = form.cleaned_data["obs"]
             fmt = form.cleaned_data["fmt"]
 
-            e = get_object_or_404(Expediente, id=expediente_id)
+            e = get_object_or_404(models.Expediente, id=expediente_id)
             template = loader.get_template("gea/tools/caratula.%s" % fmt)
             context = {
                 "e": e,
@@ -326,49 +265,23 @@ def caratula(request):
                 "fmt": fmt,
             }
             if fmt != "html":
-                response = HttpResponse(
-                    template.render(context), content_type="image/x-%s" % fmt
-                )
+                response = HttpResponse(template.render(context), content_type="image/x-%s" % fmt)
                 cd = "attachment; filename=%04d-caratula.%s"
                 response["Content-Disposition"] = cd % (expediente_id, fmt)
             else:
                 return HttpResponse(template.render(context))
             return response
     else:
-        form = CaratulaForm()  # An unbound form
+        form = forms.CaratulaForm()  # An unbound form
 
     return render(request, "gea/tools/caratula_form.html", {"form": form,})
-
-
-class SolicitudForm(forms.Form):
-    expte_nro = forms.IntegerField(
-        label="Expediente Nº",
-        widget=forms.NumberInput(attrs={"placeholder": "ej: 4300"}),
-    )
-    circunscripcion = forms.ChoiceField(
-        label="Circunscripción", choices=CIRC, initial=CIRC_DEFAULT
-    )
-    domicilio_fiscal = forms.CharField(
-        max_length=40,
-        widget=forms.TextInput(attrs={"placeholder": "ej: San Martín 430"}),
-    )
-    localidad = forms.ChoiceField(choices=CP, initial=CP_DEFAULT)
-    provincia = forms.ChoiceField(choices=PROV, initial=PROV_DEFAULT)
-    nota_titulo = forms.ChoiceField(label="Nota título", choices=NOTA)
-    nota = forms.CharField(
-        label="Nota contenido",
-        widget=forms.Textarea(
-            attrs={"placeholder": "Ingrese el texto de la nota correspondiente"}
-        ),
-        required=False,
-    )
 
 
 @login_required
 def solicitud(request):
     if request.method == "POST":  # If the form has been submitted...
         # SolicitudForm was defined in the previous section
-        form = SolicitudForm(request.POST)  # A form bound to the POST data
+        form = forms.SolicitudForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             # Process the data in form.cleaned_data
             # ...
@@ -377,13 +290,13 @@ def solicitud(request):
             domicilio_fiscal = form.cleaned_data["domicilio_fiscal"]
             # codigo_postal = form.cleaned_data['localidad']
             loc = form.cleaned_data["localidad"]
-            localidad = CP_dict[loc].split(" - ")[0]
-            codigo_postal = CP_dict[loc].split(" - ")[1]
+            localidad = gv.CP_dict[loc].split(" - ")[0]
+            codigo_postal = gv.CP_dict[loc].split(" - ")[1]
             provincia = form.cleaned_data["provincia"]
             nota_titulo = form.cleaned_data["nota_titulo"]
             nota = form.cleaned_data["nota"]
 
-            e = get_object_or_404(Expediente, id=expediente_id)
+            e = get_object_or_404(models.Expediente, id=expediente_id)
             template = loader.get_template("gea/doc/solic.html")
             context = {
                 "e": e,
@@ -397,109 +310,62 @@ def solicitud(request):
             }
             return HttpResponse(template.render(context))
     else:
-        form = SolicitudForm()  # An unbound form
+        form = forms.SolicitudForm()  # An unbound form
 
     return render(request, "gea/doc/solic_form.html", {"form": form,})
-
-
-class VisacionForm(forms.Form):
-    expte_nro = forms.IntegerField(label="Expediente Nº")
-    lugar = forms.ChoiceField(choices=LUGAR, initial=0)
 
 
 @login_required
 def visacion(request):
     if request.method == "POST":  # If the form has been submitted...
         # VisacionForm was defined in the previous section
-        form = VisacionForm(request.POST)  # A form bound to the POST data
+        form = forms.VisacionForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             # Process the data in form.cleaned_data
             # ...
             eid = form.cleaned_data["expte_nro"]
             lugar = form.cleaned_data["lugar"]
-            sr = Lugar_dict[int(lugar)][0]
-            localidad = Lugar_dict[int(lugar)][1]
+            sr = gv.Lugar_dict[int(lugar)][0]
+            localidad = gv.Lugar_dict[int(lugar)][1]
 
-            e = get_object_or_404(Expediente, id=eid)
+            e = get_object_or_404(models.Expediente, id=eid)
             # Redirect after POST
-            return render(
-                request,
-                "gea/doc/visac.html",
-                {"e": e, "sr": sr, "localidad": localidad},
-            )
+            return render(request, "gea/doc/visac.html", {"e": e, "sr": sr, "localidad": localidad},)
     else:
-        form = VisacionForm()  # An unbound form
+        form = forms.VisacionForm()  # An unbound form
 
     return render(request, "gea/doc/visac_form.html", {"form": form,})
 
 
-#
-# Buscar Plano por Nro
-#
-ftp_url = "ftp://zentyal.estudio.lan"
-
-
-class PlanoForm(forms.Form):
-    circ = forms.IntegerField(
-        label="Circunscripción", min_value=1, max_value=2, initial=1
-    )
-    n_insc = forms.IntegerField(label="Plano Nº", min_value=1, max_value=999999)
-
-
 @login_required
 def plano(request):
+    ftp_url = "ftp://zentyal.estudio.lan"
     if request.method == "POST":  # If the form has been submitted...
-        form = PlanoForm(request.POST)  # A form bound to the POST data
+        form = forms.PlanoForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             circ = form.cleaned_data["circ"]
             nro = form.cleaned_data["n_insc"]
             return HttpResponseRedirect("%s/planos/%s/%06d.pdf" % (ftp_url, circ, nro))
     else:
-        form = PlanoForm()  # An unbound form
+        form = forms.PlanoForm()  # An unbound form
 
     return render(request, "gea/search/plano_form.html", {"form": form,})
 
 
-#
-# Buscar Set de Datos por PII
-#
-class SetForm(forms.Form):
-    partida = forms.IntegerField(min_value=1, max_value=999999)
-    sub_pii = forms.IntegerField(
-        label="Subpartida", min_value=0, max_value=9999, initial=0
-    )
-
-
 @login_required
 def set(request):
+    ftp_url = "ftp://zentyal.estudio.lan"
     if request.method == "POST":  # If the form has been submitted...
-        form = SetForm(request.POST)  # A form bound to the POST data
+        form = forms.SetForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             pii = form.cleaned_data["partida"]
             sub_pii = form.cleaned_data["sub_pii"]
             url = "%s/set/%06d%04d.pdf" % (ftp_url, pii, sub_pii)
             return HttpResponseRedirect(url)
     else:
-        form = SetForm()  # An unbound form
+        form = forms.SetForm()  # An unbound form
 
     return render(request, "gea/search/set_form.html", {"form": form,})
-
-
-#
-# Calcular Digito Verificador de la PII
-#
-class DVAPIForm(forms.Form):
-    dp = forms.IntegerField(
-        label="DP (departamento)", min_value=1, max_value=19, initial=11
-    )
-    ds = forms.IntegerField(label="DS (distrito)", min_value=1, max_value=99, initial=8)
-    sd = forms.IntegerField(
-        label="SD (subdistrito)", min_value=0, max_value=99, initial=0
-    )
-    partida = forms.IntegerField(min_value=1, max_value=999999)
-    sub_pii = forms.IntegerField(
-        label="Subpartida", min_value=0, max_value=9999, initial=0
-    )
 
 
 def get_dvapi(dp, ds, sd, pii, subpii):
@@ -515,7 +381,7 @@ def get_dvapi(dp, ds, sd, pii, subpii):
 
 def dvapi(request):
     if request.method == "POST":  # If the form has been submitted...
-        form = DVAPIForm(request.POST)  # A form bound to the POST data
+        form = forms.DVAPIForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             dp = form.cleaned_data["dp"]
             ds = form.cleaned_data["ds"]
@@ -523,27 +389,16 @@ def dvapi(request):
             pii = form.cleaned_data["partida"]
             sub_pii = form.cleaned_data["sub_pii"]
             dv = get_dvapi(dp, ds, sd, pii, sub_pii)
-            return render(
-                request, "gea/tools/dvapi_form.html", {"dv": dv, "form": form},
-            )
+            return render(request, "gea/tools/dvapi_form.html", {"dv": dv, "form": form},)
     else:
-        form = DVAPIForm()  # An unbound form
+        form = forms.DVAPIForm()  # An unbound form
 
     return render(request, "gea/tools/dvapi_form.html", {"form": form,})
 
 
-#
-# Consultar estado en Sistema de Información de Expedientes del SCIT
-#
-class SIEForm(forms.Form):
-    mesa = forms.IntegerField(min_value=13401, max_value=13401, initial=13401)
-    nro = forms.IntegerField(label="Número", min_value=1, max_value=9999999)
-    digito = forms.IntegerField(label="Dígito", min_value=0, max_value=9, initial=0)
-
-
 def sie(request):
     if request.method == "POST":  # If the form has been submitted...
-        form = SIEForm(request.POST)  # A form bound to the POST data
+        form = forms.SIEForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             mesa = form.cleaned_data["mesa"]
             nro = form.cleaned_data["nro"]
@@ -554,33 +409,16 @@ def sie(request):
             url = "".join([base_url, param])
             return HttpResponseRedirect(url)
     else:
-        form = SIEForm()  # An unbound form
+        form = forms.SIEForm()  # An unbound form
 
     return render(request, "gea/tools/sie_form.html", {"form": form,})
-
-
-#
-#
-# Exptes x Catastro Local
-#
-#
-class CLForm(forms.Form):
-    lugar = forms.ModelChoiceField(
-        queryset=Lugar.objects.exclude(nombre__startswith="Colonia")
-        .exclude(nombre__startswith="Zona Rural")
-        .exclude(nombre__startswith="Zona de Islas"),
-        required=False,
-    )
-    seccion = forms.CharField(max_length=4, required=False)
-    manzana = forms.CharField(max_length=4, required=False)
-    parcela = forms.CharField(max_length=4, required=False)
 
 
 @login_required
 def catastro(request):
     if request.method == "POST":  # If the form has been submitted...
         # VisacionForm was defined in the previous section
-        form = CLForm(request.POST)  # A form bound to the POST data
+        form = forms.CLForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             # Process the data in form.cleaned_data
             # ...
@@ -593,27 +431,15 @@ def catastro(request):
             if lugar is not None:
                 filtro = "%s%s%s" % (filtro, "&expedientelugar__lugar__nombre=", lugar,)
             if seccion != "":
-                filtro = "%s%s%s" % (
-                    filtro,
-                    "&expedientelugar__catastrolocal__seccion=",
-                    seccion,
-                )
+                filtro = "%s%s%s" % (filtro, "&expedientelugar__catastrolocal__seccion=", seccion,)
             if manzana != "":
-                filtro = "%s%s%s" % (
-                    filtro,
-                    "&expedientelugar__catastrolocal__manzana=",
-                    manzana,
-                )
+                filtro = "%s%s%s" % (filtro, "&expedientelugar__catastrolocal__manzana=", manzana,)
             if parcela != "":
-                filtro = "%s%s%s" % (
-                    filtro,
-                    "&expedientelugar__catastrolocal__parcela=",
-                    parcela,
-                )
+                filtro = "%s%s%s" % (filtro, "&expedientelugar__catastrolocal__parcela=", parcela,)
             # Redirect after POST
             return HttpResponseRedirect("/admin/gea/expediente/%s" % filtro)
     else:
-        form = CLForm()  # An unbound form
+        form = forms.CLForm()  # An unbound form
 
     return render(request, "gea/search/catastro_form.html", {"form": form,})
 
@@ -673,7 +499,7 @@ def catastro(request):
 #
 # @login_required
 # def calendar(request, year, month):
-#     e = Expediente.objects.order_by('fecha_medicion').filter(
+#     e = models.Expediente.objects.order_by('fecha_medicion').filter(
 #         fecha_medicion__year=year, fecha_medicion__month=month
 #         )
 #     cal = QuerysetCalendar(e, 'fecha_medicion').formatmonth(int(year),

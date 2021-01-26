@@ -1,45 +1,29 @@
 from django.urls import path
 
-from gea.views import (
-    About,
-    CatastroLocalList,
-    ExpedienteDetail,
-    ExpedienteList,
-    Home,
-    PersonaDetail,
-    PersonaList,
-    caratula,
-    catastro,
-    dvapi,
-    plano,
-    set,
-    sie,
-    solicitud,
-    visacion,
-)
+from . import views
 
 urlpatterns = [
     # Inicio
-    path("", Home.as_view(), name="home"),
+    path("", views.Home.as_view(), name="home"),
     # About
-    path("acerca/", About.as_view(), name="about"),
+    path("acerca/", views.About.as_view(), name="about"),
     # Catastros Locales
-    path("catastros-locales/", CatastroLocalList.as_view(), name="catastros_locales"),
+    path("catastros-locales/", views.CatastroLocalList.as_view(), name="catastros_locales"),
     # Expedientes
-    path("expedientes/", ExpedienteList.as_view(), name="expedientes"),
-    path("expediente/<int:pk>/", ExpedienteDetail.as_view(), name="expediente"),
+    path("expedientes/", views.ExpedienteList.as_view(), name="expedientes"),
+    path("expediente/<int:pk>/", views.ExpedienteDetail.as_view(), name="expediente"),
     # Personas
-    path("personas/", PersonaList.as_view(), name="personas"),
-    path("persona/<int:pk>/", PersonaDetail.as_view(), name="persona"),
+    path("personas/", views.PersonaList.as_view(), name="personas"),
+    path("persona/<int:pk>/", views.PersonaDetail.as_view(), name="persona"),
     # Notas
-    path("solicitud/", solicitud, name="solicitud"),
-    path("visacion/", visacion, name="visacion"),
+    path("solicitud/", views.solicitud, name="solicitud"),
+    path("visacion/", views.visacion, name="visacion"),
     # Búsquedas
-    path("plano/", plano, name="buscar_plano"),
-    path("set/", set, name="buscar_set"),
-    path("catastro/", catastro, name="buscar_catastro"),
+    path("plano/", views.plano, name="buscar_plano"),
+    path("set/", views.set, name="buscar_set"),
+    path("catastro/", views.catastro, name="buscar_catastro"),
     # Herramientas
-    path("caratula/", caratula, name="caratula"),
-    path("dvapi/", dvapi, name="dvapi"),
-    path("sie/", sie, name="sie"),
+    path("caratula/", views.caratula, name="caratula"),
+    path("dvapi/", views.dvapi, name="dvapi"),
+    path("sie/", views.sie, name="sie"),
 ]

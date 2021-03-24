@@ -8,13 +8,16 @@ urlpatterns = [
     # About
     path("acerca/", views.About.as_view(), name="about"),
     # Catastros Locales
-    path("catastros-locales/", views.CatastroLocalList.as_view(), name="catastros_locales"),
+    path("catastros-locales/", views.CatastroLocalListView.as_view(), name="catastros_locales"),
     # Expedientes
-    path("expedientes/", views.ExpedienteList.as_view(), name="expedientes"),
-    path("expediente/<int:pk>/", views.ExpedienteDetail.as_view(), name="expediente"),
+    path("expedientes/", views.ExpedienteListView.as_view(), name="expedientes"),
+    path("expediente/<int:pk>/", views.ExpedienteDetailView.as_view(), name="expediente"),
     # Personas
-    path("personas/", views.PersonaList.as_view(), name="personas"),
-    path("persona/<int:pk>/", views.PersonaDetail.as_view(), name="persona"),
+    path("personas/", views.PersonaListView.as_view(), name="personas"),
+    path("persona/<int:pk>/", views.PersonaDetailView.as_view(), name="persona"),
+    path("persona/crear/", views.PersonaCreateView.as_view(), name="persona_create"),
+    path("persona/editar/<int:pk>/", views.PersonaUpdateView.as_view(), name="persona_update"),
+    path("persona/borrar/<int:pk>/", views.PersonaDeleteView.as_view(), name="persona_delete"),
     # Notas
     path("solicitud/", views.solicitud, name="solicitud"),
     path("visacion/", views.visacion, name="visacion"),

@@ -1,22 +1,31 @@
 {% extends "base.html" %}
-{% block title %}GEA | Acerca de{% endblock %}
+{% load static %}
+
+{% block title %}Acerca de{% endblock %}
 
 {% block content %}
-{% load static %}
-<div class="col-md-12 jumbotron">
-  <img src="{% static 'img/folder.png' %}" alt="Expedientes" height=120 class="pull-right">
-  <h1><a href="{% url 'home' %}"><strong>GEA</strong></a></h1>
-  <h4><strong>G</strong>estión de <strong>E</strong>xpedientes de <strong>A</strong>grimensores</h4>
-  <hr>
-  <blockquote class="blockquote-reverse">
-    <a href="https://github.com/quijot/gea-package/"><i class="fab fa-github"></i></a>
-    <a href="https://pypi.python.org/pypi/gea/"><i class="fab fa-python"></i></a>
-    <small>desarrollado por
-      <cite title="Santiago Pestarini">
-        <a href="https://github.com/quijot/">Santiago Pestarini</a>
-      </cite>
-    </small>
-  </blockquote>
+{% block page-heading %}{% endblock %}
+<div class="row">
+  <div class="col jumbotron">
+    <div class="d-flex justify-content-between align-items-end">
+      <div>
+        <h1 class="display-4 font-weight-bolder"><a href="{% url 'home' %}">GEA</a></h1>
+        <h4><strong>G</strong>estión de <strong>E</strong>xpedientes de <strong>A</strong>grimensores</h4>
+      </div>
+      <img class="mb-2" src="{% static 'img/folder.png' %}" alt="Expedientes" height=120>
+    </div>
+    <hr>
+    <blockquote class="blockquote text-right">
+      <a href="https://github.com/quijot/gea-package/"><i class="fab fa-github"></i></a>
+      <a href="https://pypi.python.org/pypi/gea/"><i class="fab fa-python"></i></a>
+      <footer class="blockquote-footer">desarrollado por
+        <cite title="Santiago Pestarini">
+          <a href="https://github.com/quijot/">Santiago Pestarini</a>
+        </cite>
+      </footer>
+    </blockquote>
+  </div>
 </div>
 {% endblock %}
-{% block top %}{% endblock %}
+
+{% block top-button %}{% endblock %}

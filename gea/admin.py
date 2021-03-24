@@ -170,13 +170,9 @@ class TieneOrdenPendienteFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "si":
-            return queryset.filter(
-                orden_numero__isnull=False, inscripcion_numero__isnull=True
-            )
+            return queryset.filter(orden_numero__isnull=False, inscripcion_numero__isnull=True)
         if self.value() == "no":
-            return queryset.exclude(
-                orden_numero__isnull=False, inscripcion_numero__isnull=True
-            )
+            return queryset.exclude(orden_numero__isnull=False, inscripcion_numero__isnull=True)
 
 
 class TieneAntecedentesFilter(admin.SimpleListFilter):
@@ -309,32 +305,16 @@ class AntecedenteInline(NestedTabularInline):
 class ExpedienteAdmin(NestedModelAdmin):
     filter_horizontal = ["objetos", "profesionales_firmantes"]
     fieldsets = [
-        (
-            None,
-            {
-                "fields": [("id", "fecha_plano", "created", "modified")],
-                "classes": ("extrapretty"),
-            },
-        ),
+        (None, {"fields": [("id", "fecha_plano", "created", "modified")], "classes": ("extrapretty"),},),
         ("Estado", {"fields": [("fecha_medicion",)], "classes": ("extrapretty")},),
         (
             "SCIT - Servicio de Catastro e Información Territorial",
             {
-                "fields": [
-                    (
-                        "inscripcion_numero",
-                        "inscripcion_fecha",
-                        "duplicado",
-                        "sin_inscripcion",
-                    )
-                ],
+                "fields": [("inscripcion_numero", "inscripcion_fecha", "duplicado", "sin_inscripcion",)],
                 "classes": ("extrapretty"),
             },
         ),
-        (
-            "Orden de Trabajo CoPA",
-            {"fields": [("orden_numero", "orden_fecha")], "classes": ("extrapretty"),},
-        ),
+        ("Orden de Trabajo CoPA", {"fields": [("orden_numero", "orden_fecha")], "classes": ("extrapretty"),},),
         (
             "Otros",
             {
@@ -343,10 +323,7 @@ class ExpedienteAdmin(NestedModelAdmin):
             },
         ),
         ("Objetos", {"fields": [("objetos")], "classes": ("extrapretty")}),
-        (
-            "Profesionales Firmantes",
-            {"fields": [("profesionales_firmantes")], "classes": ("extrapretty"),},
-        ),
+        ("Profesionales Firmantes", {"fields": [("profesionales_firmantes")], "classes": ("extrapretty"),},),
     ]
     readonly_fields = ("created", "modified", "ver_plano")
     inlines = [
@@ -435,9 +412,7 @@ class ExpedienteAdmin(NestedModelAdmin):
 
 
 def strip_accents(s):
-    return "".join(
-        c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
-    )
+    return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
 
 @admin.register(Antecedente)
@@ -625,19 +600,8 @@ class PartidaAdmin(admin.ModelAdmin):
 @admin.register(Persona)
 class PersonaAdmin(admin.ModelAdmin):
     fieldsets = [
-        (
-            None,
-            {
-                "fields": [
-                    ("apellidos", "nombres"),
-                    ("apellidos_alternativos", "nombres_alternativos"),
-                ]
-            },
-        ),
-        (
-            "Contacto",
-            {"fields": [("domicilio", "lugar"), ("telefono", "celular"), "email"]},
-        ),
+        (None, {"fields": [("apellidos", "nombres"), ("apellidos_alternativos", "nombres_alternativos"),]},),
+        ("Contacto", {"fields": [("domicilio", "lugar"), ("telefono", "email")]},),
         ("DNI/CUIT/CUIL/CDI", {"fields": [("tipo_doc", "documento"), "cuit_cuil"]}),
     ]
     inlines = [ExpedientePersonaInline]
@@ -646,9 +610,8 @@ class PersonaAdmin(admin.ModelAdmin):
         "domicilio",
         "lugar",
         "show_telefono",
-        "celular",
         "email",
-        "show_tipo_doc",
+        "tipo_doc",
         "documento",
         "show_cuit",
     )
@@ -660,7 +623,6 @@ class PersonaAdmin(admin.ModelAdmin):
         "apellidos_alternativos",
         "domicilio",
         "telefono",
-        "celular",
         "email",
         "cuit_cuil",
         "expedientepersona__expediente__id",
@@ -700,9 +662,7 @@ class PersonaAdmin(admin.ModelAdmin):
                 .replace(" SH", "")
                 .replace(" HNOS", "")
             )
-            return mark_safe(
-                f'<a href="http://www.cuitonline.com/search.php?q={nombre}">buscar</a>'
-            )
+            return mark_safe(f'<a href="http://www.cuitonline.com/search.php?q={nombre}">buscar</a>')
         else:
             cuit_cuil = obj.cuit_cuil.replace("-", "")
             return mark_safe(
@@ -717,16 +677,7 @@ class PersonaAdmin(admin.ModelAdmin):
 class ProfesionalAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {"fields": [("apellidos", "nombres"), ("titulo", "icopa")]}),
-        (
-            "Contacto",
-            {
-                "fields": [
-                    ("domicilio", "lugar"),
-                    ("telefono", "celular"),
-                    ("email", "web"),
-                ]
-            },
-        ),
+        ("Contacto", {"fields": [("domicilio", "lugar"), ("telefono",), ("email", "web"),]},),
         ("DNI/CUIT/CUIL/CDI", {"fields": ["cuit_cuil"]}),
         ("Otra info", {"fields": [("habilitado", "jubilado", "fallecido")]}),
     ]
@@ -737,7 +688,6 @@ class ProfesionalAdmin(admin.ModelAdmin):
         "domicilio",
         "lugar",
         "telefono",
-        "celular",
         "email",
         "web",
         "cuit_cuil",
@@ -749,7 +699,6 @@ class ProfesionalAdmin(admin.ModelAdmin):
         "icopa",
         "domicilio",
         "telefono",
-        "celular",
         "email",
         "web",
         "cuit_cuil",
@@ -769,16 +718,7 @@ class PagoInline(NestedStackedInline):
 @admin.register(Presupuesto)
 class PresupuestoAdmin(NestedModelAdmin):
     fieldsets = [
-        (
-            None,
-            {
-                "fields": [
-                    ("expediente"),
-                    ("monto", "fecha", "porcentaje_cancelado"),
-                    ("observacion"),
-                ]
-            },
-        ),
+        (None, {"fields": [("expediente"), ("monto", "fecha", "porcentaje_cancelado"), ("observacion"),]},),
     ]
     inlines = [PagoInline]
     list_display = (

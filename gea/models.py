@@ -1,10 +1,11 @@
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django_extensions.db.models import TimeStampedModel
 
 
-def CapitalizePhrase(string):
+def capitalize_phrase(string):
     phrase = ""
     for word in string.split():
         phrase = f"{phrase} {word[0].upper()}{word[1:].lower()}"
@@ -14,11 +15,7 @@ def CapitalizePhrase(string):
 class Antecedente(models.Model):
     expediente = models.ForeignKey("Expediente", on_delete=models.CASCADE)
     expediente_modificado = models.ForeignKey(
-        "Expediente",
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="expediente_modificado",
+        "Expediente", blank=True, null=True, on_delete=models.CASCADE, related_name="expediente_modificado",
     )
     inscripcion_numero = models.IntegerField()
     duplicado = models.BooleanField(default=False)
@@ -30,12 +27,10 @@ class Antecedente(models.Model):
 
 
 class Catastro(models.Model):
-    expediente_partida = models.ForeignKey(
-        "ExpedientePartida", on_delete=models.CASCADE
-    )
+    expediente_partida = models.ForeignKey("ExpedientePartida", on_delete=models.CASCADE)
     zona = models.ForeignKey("Zona", on_delete=models.CASCADE)
-    seccion = models.CharField(max_length=10, blank=True)
-    poligono = models.CharField(max_length=10, blank=True)
+    seccion = models.CharField("sección", max_length=10, blank=True)
+    poligono = models.CharField("polígono", max_length=10, blank=True)
     manzana = models.CharField(max_length=10, blank=True)
     parcela = models.CharField(max_length=10)
     subparcela = models.CharField(max_length=10, blank=True)
@@ -51,12 +46,12 @@ class Catastro(models.Model):
 
 class CatastroLocal(models.Model):
     expediente_lugar = models.ForeignKey("ExpedienteLugar", on_delete=models.CASCADE)
-    seccion = models.CharField(max_length=20, blank=True)
+    seccion = models.CharField("sección", max_length=20, blank=True)
     manzana = models.CharField(max_length=20, blank=True)
     parcela = models.CharField(max_length=20, blank=True)
     subparcela = models.CharField(max_length=20, blank=True)
     suburbana = models.BooleanField(default=False)
-    poligono = models.CharField(max_length=20, blank=True)
+    poligono = models.CharField("polígono", max_length=20, blank=True)
 
     class Meta:
         verbose_name = "catastro local"
@@ -91,9 +86,7 @@ class Presupuesto(models.Model):
     expediente = models.ForeignKey("Expediente", on_delete=models.PROTECT)
     monto = models.DecimalField(max_digits=8, decimal_places=2)
     fecha = models.DateField()
-    porcentaje_cancelado = models.DecimalField(
-        max_digits=5, decimal_places=2, verbose_name="% cancelado"
-    )
+    porcentaje_cancelado = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="% cancelado")
     observacion = models.CharField(max_length=255, blank=True)
 
     class Meta:
@@ -158,9 +151,7 @@ class Sd(models.Model):
     id = models.AutoField(primary_key=True)
     ds = models.ForeignKey(Ds, db_column="ds", on_delete=models.PROTECT)
     sd = models.IntegerField()
-    nombre = models.CharField(
-        max_length=50, blank=True, verbose_name="nombre subdistrito",
-    )
+    nombre = models.CharField(max_length=50, blank=True, verbose_name="nombre subdistrito",)
 
     @property
     def subdistrito(self):
@@ -223,24 +214,20 @@ class Titulo(models.Model):
 class Profesional(models.Model):
     nombres = models.CharField(max_length=50)
     apellidos = models.CharField(max_length=50)
-    titulo = models.ForeignKey(
-        Titulo, null=True, default=None, on_delete=models.SET_NULL
-    )
+    titulo = models.ForeignKey(Titulo, blank=True, null=True, on_delete=models.SET_NULL)
     icopa = models.CharField("ICoPA", max_length=8, blank=True)
     domicilio = models.CharField(max_length=50, blank=True)
     lugar = models.ForeignKey(Lugar, null=True, default=None, on_delete=models.SET_NULL)
-    telefono = models.CharField(max_length=20, blank=True)
-    celular = models.CharField(max_length=20, blank=True)
+    telefono = models.CharField("teléfono", max_length=15, blank=True)
     web = models.URLField(max_length=50, blank=True)
     email = models.EmailField(max_length=50, blank=True)
-    cuit_cuil = models.CharField(max_length=14, blank=True, verbose_name="CUIT/CUIL",)
+    cuit_cuil = models.CharField("CUIT/CUIL", max_length=14, blank=True)
     habilitado = models.BooleanField(default=True)
     jubilado = models.BooleanField(default=False)
     fallecido = models.BooleanField(default=False)
 
-    @property
-    def nombre_completo(self):
-        return f"{self.apellidos} {self.nombres}"
+    # def get_absolute_url(self):
+    #     return reverse("profesional", kwargs={"pk": self.pk})
 
     class Meta:
         verbose_name_plural = "profesionales"
@@ -249,19 +236,21 @@ class Profesional(models.Model):
     def __str__(self):
         return self.nombre_completo
 
+    @property
+    def nombre_completo(self):
+        return f"{self.apellidos} {self.nombres}".strip()
+
     def save(self, *args, **kwargs):
         self.apellidos = self.apellidos.upper().strip()
-        self.nombres = CapitalizePhrase(self.nombres)
+        self.nombres = capitalize_phrase(self.nombres)
         super().save(*args, **kwargs)
 
 
 class Expediente(TimeStampedModel):
-    id = models.IntegerField("Expediente Nº", primary_key=True)
+    id = models.IntegerField("Expediente", primary_key=True)
     fecha_plano = models.DateField(blank=True, null=True)
     fecha_medicion = models.DateField(blank=True, null=True)
-    inscripcion_numero = models.IntegerField(
-        "SCIT inscripción Nº", unique=True, blank=True, null=True
-    )
+    inscripcion_numero = models.IntegerField("SCIT inscripción Nº", unique=True, blank=True, null=True)
     inscripcion_fecha = models.DateField("Fecha inscripción", blank=True, null=True)
     duplicado = models.BooleanField(default=False)
     orden_numero = models.IntegerField("CoPA Expendiente Nº", blank=True, null=True)
@@ -280,7 +269,7 @@ class Expediente(TimeStampedModel):
     profesionales_firmantes = models.ManyToManyField(Profesional)
 
     def get_absolute_url(self):
-        return reverse("expediente", kwargs={"pk": str(self.id)})
+        return reverse("expediente", kwargs={"pk": self.pk})
 
     def inscripto(self):
         return self.inscripcion_numero != 0
@@ -303,9 +292,7 @@ class Expediente(TimeStampedModel):
 
     def firmantes(self):
         """Devuelve las personas que deben firmar la Solicitud de Inscripción."""
-        return self.expedientepersona_set.filter(
-            Q(propietario=True) | Q(sucesor=True)
-        ).exclude(sucesion=True)
+        return self.expedientepersona_set.filter(Q(propietario=True) | Q(sucesor=True)).exclude(sucesion=True)
 
     @property
     def comitentes_count(self):
@@ -378,14 +365,7 @@ class ExpedientePersona(models.Model):
 
 
 class Partida(models.Model):
-    sd = models.ForeignKey(
-        "Sd",
-        db_column="sd",
-        blank=True,
-        null=True,
-        default=None,
-        on_delete=models.SET_NULL,
-    )
+    sd = models.ForeignKey("Sd", db_column="sd", blank=True, null=True, default=None, on_delete=models.SET_NULL,)
     pii = models.IntegerField()
     subpii = models.IntegerField(blank=True)
     api = models.SmallIntegerField()
@@ -443,57 +423,63 @@ class PartidaDominio(models.Model):
 
 
 class Persona(models.Model):
-    nombres = models.CharField(max_length=100, blank=True)
-    apellidos = models.CharField(max_length=100)
+    nombres = models.CharField("nombre", max_length=100, blank=True)
+    apellidos = models.CharField("apellido", max_length=100)
     nombres_alternativos = models.CharField(max_length=100, blank=True)
     apellidos_alternativos = models.CharField(max_length=100, blank=True)
     domicilio = models.CharField(max_length=50, blank=True)
-    lugar = models.ForeignKey(
-        Lugar, blank=True, null=True, default=None, on_delete=models.SET_NULL
-    )
-    telefono = models.CharField(max_length=20, blank=True)
-    celular = models.CharField(max_length=20, blank=True)
+    lugar = models.ForeignKey(Lugar, blank=True, null=True, on_delete=models.SET_NULL)
+    telefono = models.CharField("teléfono", max_length=15, blank=True)
     email = models.EmailField(max_length=50, blank=True)
-    cuit_cuil = models.CharField(
-        max_length=14,
-        unique=True,
-        blank=True,
-        null=True,
-        default=None,
-        verbose_name="CUIT/CUIL/CDI",
-    )
-    TIPO_DOC = ((0, "DNI"), (1, "LC"), (2, "LE"), (3, "Otro"))
-    tipo_doc = models.SmallIntegerField(
-        choices=TIPO_DOC, blank=True, null=True, default=None
-    )
-    documento = models.IntegerField(unique=True, blank=True, null=True, default=None)
-
-    def get_absolute_url(self):
-        return reverse("persona", kwargs={"pk": str(self.id)})
-
-    @property
-    def nombre_completo(self):
-        nombre = self.nombres if self.nombres else ""
-        return f"{self.apellidos} {nombre}".strip()
-
-    def show_tipo_doc(self):
-        if self.tipo_doc != "" and self.tipo_doc is not None:
-            return self.TIPO_DOC[self.tipo_doc][1]
-
-    show_tipo_doc.short_description = "Tipo doc"
-    show_tipo_doc.admin_order_field = "tipo_doc"
+    cuit_cuil = models.CharField("CUIT/CUIL/CDI", max_length=14, unique=True, blank=True, null=True)
+    TIPO_DOC = ((0, "DNI"), (1, "LC"), (2, "LE"), (3, "Otro"), (4, "Extranjero"))
+    tipo_doc = models.SmallIntegerField("tipo documento", choices=TIPO_DOC, blank=True, null=True, default=None)
+    documento = models.IntegerField(blank=True, null=True)
 
     class Meta:
         ordering = ["apellidos", "nombres"]
+        unique_together = ("tipo_doc", "documento")
 
     def __str__(self):
         return self.nombre_completo
 
+    def get_absolute_url(self):
+        return reverse("persona", kwargs={"pk": self.pk})
+
+    def get_update_url(self):
+        return reverse("persona_update", kwargs={"pk": self.pk})
+
+    def get_delete_url(self):
+        return reverse("persona_delete", kwargs={"pk": self.pk})
+
+    @property
+    def nombre_completo(self):
+        return f"{self.apellidos} {self.nombres}".strip()
+
+    @property
+    def documento_completo(self):
+        if self.documento:
+            return f"{self.get_tipo_doc_display()} {self.documento}".strip()
+        else:
+            return ""
+
+    @property
+    def cuit_link(self):
+        url = '<a href="http://www.cuitonline.com/search.php?q=%s">%s</a>'
+        if self.cuit_cuil:
+            return mark_safe(url % (self.cuit_cuil, self.cuit_cuil))
+        elif self.documento:
+            return mark_safe(url % (self.documento, "buscar"))
+        elif self.apellidos:
+            return mark_safe(url % (self.nombre_completo, "buscar"))
+        else:
+            return ""
+
     def save(self, *args, **kwargs):
         self.apellidos = self.apellidos.upper().strip()
         self.apellidos_alternativos = self.apellidos_alternativos.upper().strip()
-        self.nombres = CapitalizePhrase(self.nombres)
-        self.nombres_alternativos = CapitalizePhrase(self.nombres_alternativos)
+        self.nombres = capitalize_phrase(self.nombres)
+        self.nombres_alternativos = capitalize_phrase(self.nombres_alternativos)
         super().save(*args, **kwargs)
 
 

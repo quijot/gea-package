@@ -1,83 +1,151 @@
 {% extends "base.html" %}
-{% block title %}GEA | Listado de Personas{% endblock title %}
+{% block title %}Personas{% endblock title %}
 
-{% block content %}
-<div class="page-header">
-  <h1><i class="fas fa-fw fa-users"></i> <a href="{% url 'personas' %}">Listado de Personas</a></h1>
-  <strong>{{ count }}</strong> persona{% if count > 1 %}s{% endif %} filtrada{% if count > 1 %}s{% endif %}
+{% block page-title %}
+<i class="fas fa-fw fa-users"></i>
+Personas
+{% endblock %}
+{% block page-heading-buttons %}
+<div class="btn-group">
+  <a href="{% url 'persona_create' %}" class="btn btn-success">
+    <i class="fas fa-user-plus fa-fw"></i>
+    Agregar
+  </a>
 </div>
-<div class="well well-sm col-md-12">
-  <form class="navbar-form navbar-right" action="." method="get">
-    <div class="form-group">
-      <div class="input-group input-group-sm">
-        <span class="input-group-addon"><i class="fas fa-fw fa-user"></i> <i class="fas fa-fw fa-folder"></i> <i class="fas fa-fw fa-thumbtack"></i></span>
-        <input type="text" id="search" name="search" placeholder="Persona/Expediente/Lugar/PII/Plano" class="form-control" value="{{ request.GET.search }}" size="35">
-        <span class="input-group-btn"><button type="submit" class="btn btn-sm btn-success"><i class="fas fa-fw fa-search"></i></button></span>
+{% endblock %}
+
+{% load tags %}
+{% block content %}
+<div class="card bg-light shadow mb-2">
+  <div class="card-body">
+    <div class="row">
+      <!-- Filter -->
+      <div class="col-sm-12 col-md-5">
+        <div class="d-flex justify-content-start align-items-start">
+          <label>
+            Mostrar
+            <div class="btn-group">
+              <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false">
+                {{ request.GET.paginate_by|default:10 }}
+              </button>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="?{% url_replace request 'paginate_by' 10 %}">10</a>
+                <a class="dropdown-item" href="?{% url_replace request 'paginate_by' 25 %}">25</a>
+                <a class="dropdown-item" href="?{% url_replace request 'paginate_by' 50 %}">50</a>
+                <a class="dropdown-item" href="?{% url_replace request 'paginate_by' 100 %}">100</a>
+              </div>
+            </div>
+            registros
+          </label>
+        </div>
+      </div>
+      <div class="col-sm-12 col-md-7">
+        <div class="d-flex justify-content-end align-items-start">
+          <form class="form-inline" action="." method="get">
+            <div class="input-group mb-2">
+              <input type="text" id="search" name="search" placeholder="Persona/Expediente/Lugar/PII/Plano"
+                class="form-control" value="{{ request.GET.search }}" size="35">
+              <div class="input-group-append">
+                <button type="button" class="btn btn-sm btn-primary">
+                  <i class="fas fa-fw fa-search"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </form>
-</div>
-{% include "_pagination.html" %}
-<table class="table table-bordered table-condensed table-hover">
-  <thead>
-    <tr>
-      <th>Persona</th>
-      <th>Expediente(s)</th>
-      <th>Lugar(es)</th>
-      <th>Partida(s)</th>
-      <th>Plano</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for p in object_list %}
-    {% if p.expedientepersona_set.count > 0 %}
-    <tr>
-      <td rowspan="{{ p.expedientepersona_set.count }}"><!-- PERSONA -->
-        <!--<a href="{% url 'persona' p.id %}">{{ p.nombre_completo }}</a>-->
-        <a href="/admin/gea/persona/{{ p.id }}/">{{ p.nombre_completo }}</a>
-      </td>
-      {% if p.expedientepersona_set %}
-        {% for ep in p.expedientepersona_set.all %}
-          {% if not forloop.first %}
-    <tr>
-          {% endif %}
-      <td><!-- EXPEDIENTE -->
-        <a href="/admin/gea/expediente/{{ ep.expediente.id }}/">{{ ep.expediente.id }}</a>
-        <!--<a href="{% url 'expediente' ep.expediente.id %}">{{ ep.expediente.id }}</a>-->
-        {% if ep.expediente.orden_numero and not ep.expediente.inscripcion_numero %}<span class="label label-warning">PENDIENTE</span>{% endif %}
-        {% if ep.expediente.cancelado %}<span class="label label-danger">CANCELADO</span>{% endif %}
-        {% if ep.comitente %}<span class="label label-primary">COMITENTE</span>{% endif %}
-      </td>
-      <td><!-- LUGARES -->
-          {% if ep.expediente.expedientelugar_set %}
-            {% for el in ep.expediente.expedientelugar_set.all %}
-        <a href="/admin/gea/lugar/{{ el.lugar.id }}/">{{ el.lugar.nombre }}</a> {% for cl in el.catastrolocal_set.all %}<br />{{ cl }}{% endfor %}{% if not forloop.last %}<br>{% endif %}
+    <div class="row">
+      <!-- Data -->
+      <div class="col-sm-12">
+        <table class="table table-sm table-striped table-hover table-responsive-md">
+          <thead>
+            <tr>
+              <th>Persona</th>
+              <th>Expediente(s)</th>
+              <th>Domicilio</th>
+              <th>Documento</th>
+              <th>CUIT/CUIL</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for object in object_list %}
+            <tr>
+              <td>
+                <a href="{{ object.get_absolute_url }}">{{ object.nombre_completo }}</a>
+              </td>
+              <td>
+                {% for ep in object.expedientepersona_set.all %}
+                <a href="{{ ep.expediente.get_absolute_url }}" class="badge badge-dark">
+                  <strong>{{ ep.expediente.id }}</strong>
+                </a>
+                {% empty %}
+                &ndash;
+                {% endfor %}
+              </td>
+              <td>
+                {{ object.domicilio|default:"&ndash;" }}
+              </td>
+              <td>
+                {{ object.documento_completo|default:"&ndash;" }}
+              </td>
+              <td>
+                {{ object.cuit_link }}
+              </td>
+              <td>
+                {{ object.telefono|default:"&ndash;" }}
+              </td>
+              <td>
+                {{ object.email|default:"&ndash;" }}
+              </td>
+              <td>
+                <div class="btn-group">
+                  <a href="{{ object.get_absolute_url }}" class="btn btn-info btn-sm" title="Ver">
+                    <i class="fas fa-fw fa-info"></i>
+                  </a>
+                  <a href="{{ object.get_update_url }}" class="btn btn-primary btn-sm" title="Editar">
+                    <i class="fas fa-fw fa-pen"></i>
+                  </a>
+                  <a href="{{ object.get_delete_url }}" class="btn btn-danger btn-sm" title="Eliminar">
+                    <i class="fas fa-fw fa-trash"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <div class="alert alert-info" role="alert">
+              <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+              <span class="sr-only">Información:</span>
+              No se encontraron Personas.
+            </div>
             {% endfor %}
-          {% endif %}
-      </td>
-      <td><!-- PARTIDAS -->
-      {% if ep.expediente.expedientepartida_set %}
-        {% for ep in ep.expediente.expedientepartida_set.all %}
-          {% if ep.set_ruta %}<a href="{{ ep.set_ruta }}">{% endif %}{{ ep.partida.sd }}-{{ ep.partida }}{% if ep.set_ruta %}</a>{% endif %}{% if not forloop.last %}<br>{% endif %}
-        {% endfor %}
-      {% endif %}
-      </td>
-      <td><!-- PLANO -->
-        {% if ep.expediente.plano_ruta %}<a href="{{ ep.expediente.plano_ruta }}">{% endif %}{% if ep.expediente.inscripcion_numero %}{{ ep.expediente.inscripcion_numero }}{% endif %}{% if ep.expediente.plano_ruta %}</a>{% endif %}
-        {% if ep.expediente.inscripcion_fecha %}({{ ep.expediente.inscripcion_fecha }}){% endif %}
-      </td>
-    </tr>
-        {% endfor %}
-      {% endif %}
-    {% endif %}
-    {% empty %}
-    <div class="alert alert-info" role="alert">
-      <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
-      <span class="sr-only">Información:</span>
-      No se encontraron Personas.
+          </tbody>
+        </table>
+      </div>
     </div>
-    {% endfor %}
-  </tbody>
-</table>
-{% include "_pagination.html" %}
+    <div class="row">
+      <!-- Filter -->
+      <div class="col-sm-12 col-md-4">
+        <div class="d-flex justify-content-start align-items-start">
+          <label>
+            Mostrando
+            <strong>{{ object_list.count }}</strong>
+            de
+            <strong>{{ count }}</strong>
+            registro{% if count > 1 %}s{% endif %}
+          </label>
+        </div>
+      </div>
+      <div class="col-sm-12 col-md-8">
+        <div class="d-flex justify-content-end align-items-start">
+          {% include "includes/_pagination.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock content %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Persona{% endblock %}
+
+{% block page-title %}
+<i class="fas fa-user fa-fw"></i>
+Persona |
+<span class="text-primary">{% if object %}Editando {{ object }}{% else %}Agregando{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="card bg-light shadow mb-4">
+  <div class="card-body">
+    {% crispy form %}
+  </div>
+</div>
+{% endblock %}

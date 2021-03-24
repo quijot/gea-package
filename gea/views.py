@@ -1,10 +1,13 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
-from django.views.generic import DetailView, ListView, TemplateView
+from django.urls import reverse_lazy
+from django.views import generic
 
 from . import forms
 from . import gea_vars as gv
@@ -13,14 +16,21 @@ from . import models
 
 class CounterMixin(object):
     def get_context_data(self, **kwargs):
-        context = super(CounterMixin, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context["count"] = self.get_queryset().count()
         return context
 
 
+class SuccessDeleteMessageMixin:
+    def delete(self, request, *args, **kwargs):
+        delete_message = self.success_message if hasattr(self, "success_message") else "Objeto eliminado con éxito"
+        messages.success(self.request, delete_message)
+        return super().delete(request, *args, **kwargs)
+
+
 class SearchMixin(object):
     def get_queryset(self):
-        qset = super(SearchMixin, self).get_queryset()
+        qset = super().get_queryset()
         q = self.request.GET.get("search")
         if q:
             q = q.split(" ")
@@ -39,17 +49,17 @@ class SearchMixin(object):
 
 class ExpedienteAbiertoMixin(object):
     def get_queryset(self):
-        qset = super(ExpedienteAbiertoMixin, self).get_queryset()
+        qset = super().get_queryset()
         qset = qset.filter(Q(inscripcion_numero__isnull=True) & Q(cancelado=False) & Q(sin_inscripcion=False))[:10]
         return qset
 
 
-class Home(LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin, ListView):
+class Home(LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin, generic.ListView):
     template_name = "index.html"
     model = models.Expediente
 
     def get_context_data(self, *args, **kwargs):
-        context = super(Home, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         # last 5 inscriptos
         context["insc_list"] = models.Expediente.objects.filter(
             Q(inscripcion_numero__isnull=False) & Q(inscripcion_fecha__isnull=False)
@@ -67,13 +77,13 @@ class Home(LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin
         return context
 
 
-class About(TemplateView):
+class About(generic.TemplateView):
     template_name = "about.html"
 
 
 class ExpedienteMixin(object):
     def get_queryset(self):
-        qset = super(ExpedienteMixin, self).get_queryset()
+        qset = super().get_queryset()
         q = self.request.GET.get("pendiente")
         if q:  # orden pendiente
             qset = qset.filter(Q(inscripcion_numero__isnull=q) & Q(orden_numero__isnull=not q))
@@ -94,7 +104,7 @@ class ExpedienteMixin(object):
         return qset
 
 
-class ExpedienteList(LoginRequiredMixin, CounterMixin, SearchMixin, ListView):
+class ExpedienteListView(LoginRequiredMixin, CounterMixin, SearchMixin, generic.ListView):
     model = models.Expediente
     paginate_by = 10
 
@@ -106,13 +116,13 @@ class ExpedienteList(LoginRequiredMixin, CounterMixin, SearchMixin, ListView):
         return self.request.GET.get("paginate_by", self.paginate_by)
 
 
-class ExpedienteDetail(LoginRequiredMixin, DetailView):
+class ExpedienteDetailView(LoginRequiredMixin, generic.DetailView):
     model = models.Expediente
 
 
 class NombreSearchMixin(object):
     def get_queryset(self):
-        q = super(NombreSearchMixin, self).get_queryset()
+        q = super().get_queryset()
         query = self.request.GET.get("search")
         query = "" if not query else query.split()
         for w in query:
@@ -129,18 +139,64 @@ class NombreSearchMixin(object):
         return q
 
 
-class PersonaList(LoginRequiredMixin, CounterMixin, NombreSearchMixin, ListView):
-    model = models.Persona
-    paginate_by = 50
+class PersonaFilterMixin(object):
+    def get_queryset(self):
+        q = super().get_queryset()
+        query = self.request.GET.get("search")
+        query = "" if not query else query.split()
+        for w in query:
+            q = q.filter(
+                Q(nombres__icontains=w)
+                | Q(apellidos__icontains=w)
+                | Q(nombres_alternativos__icontains=w)
+                | Q(apellidos_alternativos__icontains=w)
+                | Q(email__icontains=w)
+                | Q(documento__contains=w)
+                | Q(cuit_cuil__contains=w)
+                | Q(telefono__contains=w)
+                | Q(expedientepersona__expediente__id__contains=w)
+            ).distinct()
+        return q
 
 
-class PersonaDetail(LoginRequiredMixin, DetailView):
+# class PersonaListView(LoginRequiredMixin, NombreSearchMixin, CounterMixin, generic.ListView):
+class PersonaListView(LoginRequiredMixin, PersonaFilterMixin, CounterMixin, generic.ListView):
     model = models.Persona
+    paginate_by = 10
+
+    def get_paginate_by(self, queryset):
+        """
+        Paginate by specified value in querystring, or use default class
+        property value.
+        """
+        return self.request.GET.get("paginate_by", self.paginate_by)
+
+
+class PersonaDetailView(LoginRequiredMixin, generic.DetailView):
+    model = models.Persona
+
+
+class PersonaCreateView(SuccessMessageMixin, LoginRequiredMixin, generic.CreateView):
+    model = models.Persona
+    form_class = forms.PersonaForm
+    success_message = "¡Persona creada con éxito!"
+
+
+class PersonaUpdateView(SuccessMessageMixin, LoginRequiredMixin, generic.UpdateView):
+    model = models.Persona
+    form_class = forms.PersonaForm
+    success_message = "¡Persona modificada con éxito!"
+
+
+class PersonaDeleteView(SuccessDeleteMessageMixin, LoginRequiredMixin, generic.DeleteView):
+    model = models.Persona
+    success_url = reverse_lazy("personas")
+    success_message = "Persona eliminada con éxito."
 
 
 class LugarSearchMixin(object):
     def get_queryset(self):
-        queryset = super(LugarSearchMixin, self).get_queryset()
+        queryset = super().get_queryset()
         q = self.request.GET.get("lugar")
         if q:
             return queryset.filter(expedientelugar__lugar__nombre=q)
@@ -149,7 +205,7 @@ class LugarSearchMixin(object):
 
 class SeccionSearchMixin(object):
     def get_queryset(self):
-        queryset = super(SeccionSearchMixin, self).get_queryset()
+        queryset = super().get_queryset()
         q = self.request.GET.get("seccion")
         if q:
             return queryset.filter(expedientelugar__catastrolocal__seccion=q)
@@ -158,7 +214,7 @@ class SeccionSearchMixin(object):
 
 class ManzanaSearchMixin(object):
     def get_queryset(self):
-        queryset = super(ManzanaSearchMixin, self).get_queryset()
+        queryset = super().get_queryset()
         q = self.request.GET.get("manzana")
         if q:
             return queryset.filter(expedientelugar__catastrolocal__manzana=q)
@@ -167,7 +223,7 @@ class ManzanaSearchMixin(object):
 
 class ParcelaSearchMixin(object):
     def get_queryset(self):
-        queryset = super(ParcelaSearchMixin, self).get_queryset()
+        queryset = super().get_queryset()
         q = self.request.GET.get("parcela")
         if q:
             return queryset.filter(expedientelugar__catastrolocal__parcela=q)
@@ -176,7 +232,7 @@ class ParcelaSearchMixin(object):
 
 class CLMixin(object):
     def get_queryset(self):
-        qset = super(CLMixin, self).get_queryset()
+        qset = super().get_queryset()
         q = self.request.GET.get("lugar")
         if q is not None:
             qset = qset.filter(expedientelugar__lugar__nombre=q).distinct()
@@ -192,13 +248,13 @@ class CLMixin(object):
         return qset
 
 
-class CatastroLocalList(LoginRequiredMixin, CounterMixin, CLMixin, ListView):
+class CatastroLocalListView(LoginRequiredMixin, CounterMixin, CLMixin, generic.ListView):
     template_name = "gea/catastros_locales.html"
     model = models.Expediente
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
-        context = super(CatastroLocalList, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         lugar = self.request.GET.get("lugar")
         context["lugar"] = lugar
         s = self.request.GET.get("seccion")
@@ -345,7 +401,7 @@ def plano(request):
         if form.is_valid():  # All validation rules pass
             circ = form.cleaned_data["circ"]
             nro = form.cleaned_data["n_insc"]
-            return HttpResponseRedirect("%s/planos/%s/%06d.pdf" % (ftp_url, circ, nro))
+            return redirect("%s/planos/%s/%06d.pdf" % (ftp_url, circ, nro))
     else:
         form = forms.PlanoForm()  # An unbound form
 
@@ -361,7 +417,7 @@ def set(request):
             pii = form.cleaned_data["partida"]
             sub_pii = form.cleaned_data["sub_pii"]
             url = "%s/set/%06d%04d.pdf" % (ftp_url, pii, sub_pii)
-            return HttpResponseRedirect(url)
+            return redirect(url)
     else:
         form = forms.SetForm()  # An unbound form
 
@@ -407,7 +463,7 @@ def sie(request):
             base_url = "https://www.santafe.gov.ar/index.php/apps/sie"
             param = "?mesa=%d&numero=%d&digito=%d&tipoSIE=1" % (mesa, nro, dv)
             url = "".join([base_url, param])
-            return HttpResponseRedirect(url)
+            return redirect(url)
     else:
         form = forms.SIEForm()  # An unbound form
 
@@ -437,7 +493,7 @@ def catastro(request):
             if parcela != "":
                 filtro = "%s%s%s" % (filtro, "&expedientelugar__catastrolocal__parcela=", parcela,)
             # Redirect after POST
-            return HttpResponseRedirect("/admin/gea/expediente/%s" % filtro)
+            return redirect("/admin/gea/expediente/%s" % filtro)
     else:
         form = forms.CLForm()  # An unbound form
 

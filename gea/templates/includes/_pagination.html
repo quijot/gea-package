@@ -1,0 +1,27 @@
+{% block pagination %}
+{% load tags %}
+<!-- pagination -->
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="pagination">
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' 1 %}">&laquo;</a></li>
+    <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' page_obj.previous_page_number %}">&lsaquo;</a></li>
+    {% endif %}
+    {% for pg in page_obj.paginator.page_range %}
+      {% if page_obj.number < pg|add:"3"  and page_obj.number > pg|add:"-3" %}
+        {% if page_obj.number == pg %}
+    <li class="page-item active"><span class="page-link" href="?{% url_replace request 'page' pg %}">{{ pg }}<span class="sr-only">(current)</span></span></li>
+        {% else %}
+    <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' pg %}">{{ pg }}</a></li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' page_obj.next_page_number %}">&rsaquo;</a></li>
+    <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' page_obj.paginator.num_pages %}">&raquo;</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock pagination %}

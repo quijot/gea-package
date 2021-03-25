@@ -1,5 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarToggler"
+    aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   <a class="navbar-brand" href="{% url 'home' %}">
@@ -7,23 +8,26 @@
   </a>
   <div class="collapse navbar-collapse" id="navbarToggler">
     <ul class="navbar-nav mr-auto">
-      <!-- Listados -->
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" id="navbarDropdown" role="button" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-list fa-fw"></i> Listados
+      <!-- Expedientes -->
+      {% url 'expedientes' as url %}
+      <li class="nav-item {% if request.path == url %}active{% endif %}">
+        <a class="nav-link" href="{{ url }}">
+          <i class="fas fa-fw fa-folder"></i> Expedientes
         </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="{% url 'expedientes' %}">
-            <i class="far fa-folder"></i> Expedientes
-          </a>
-          <a class="dropdown-item" href="{% url 'personas' %}">
-            <i class="fas fa-users"></i> Personas
-          </a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="{% url 'catastros_locales' %}">
-            <i class="fas fa-map-signs"></i> Catatros Locales
-          </a>
-        </div>
+      </li>
+      <!-- Personas -->
+      {% url 'personas' as url %}
+      <li class="nav-item {% if request.path == url %}active{% endif %}">
+        <a class="nav-link" href="{{ url }}">
+          <i class="fas fa-fw fa-users"></i> Personas
+        </a>
+      </li>
+      <!-- Catastros Locales -->
+      {% url 'catastros_locales' as url %}
+      <li class="nav-item {% if request.path == url %}active{% endif %}">
+        <a class="nav-link" href="{{ url }}?lugar=Ciudad%20de%20GÁLVEZ">
+            <i class="fas fa-fw fa-map-signs"></i> Catatros Locales
+        </a>
       </li>
       <!-- Notas -->
       <li class="nav-item dropdown">

@@ -14,11 +14,20 @@ from . import gea_vars as gv
 from . import models
 
 
-class CounterMixin(object):
+class CounterMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["count"] = self.get_queryset().count()
         return context
+
+
+class PaginateByMixin:
+    def get_paginate_by(self, queryset):
+        """
+        Paginate by specified value in querystring, or use default class
+        property value.
+        """
+        return self.request.GET.get("paginate_by", self.paginate_by)
 
 
 class SuccessDeleteMessageMixin:
@@ -104,16 +113,9 @@ class ExpedienteMixin(object):
         return qset
 
 
-class ExpedienteListView(LoginRequiredMixin, CounterMixin, SearchMixin, generic.ListView):
+class ExpedienteListView(LoginRequiredMixin, PaginateByMixin, CounterMixin, SearchMixin, generic.ListView):
     model = models.Expediente
     paginate_by = 10
-
-    def get_paginate_by(self, queryset):
-        """
-        Paginate by specified value in querystring, or use default class
-        property value.
-        """
-        return self.request.GET.get("paginate_by", self.paginate_by)
 
 
 class ExpedienteDetailView(LoginRequiredMixin, generic.DetailView):
@@ -160,16 +162,9 @@ class PersonaFilterMixin(object):
 
 
 # class PersonaListView(LoginRequiredMixin, NombreSearchMixin, CounterMixin, generic.ListView):
-class PersonaListView(LoginRequiredMixin, PersonaFilterMixin, CounterMixin, generic.ListView):
+class PersonaListView(LoginRequiredMixin, PaginateByMixin, CounterMixin, PersonaFilterMixin, generic.ListView):
     model = models.Persona
     paginate_by = 10
-
-    def get_paginate_by(self, queryset):
-        """
-        Paginate by specified value in querystring, or use default class
-        property value.
-        """
-        return self.request.GET.get("paginate_by", self.paginate_by)
 
 
 class PersonaDetailView(LoginRequiredMixin, generic.DetailView):

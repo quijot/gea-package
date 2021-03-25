@@ -63,17 +63,17 @@ class Home(LoginRequiredMixin, CounterMixin, SearchMixin, ExpedienteAbiertoMixin
         # last 5 inscriptos
         context["insc_list"] = models.Expediente.objects.filter(
             Q(inscripcion_numero__isnull=False) & Q(inscripcion_fecha__isnull=False)
-        ).order_by("-inscripcion_fecha", "inscripcion_numero")[:5]
+        ).order_by("-inscripcion_fecha", "inscripcion_numero")
         # ordenes pendientes
         context["ord_list"] = models.Expediente.objects.filter(
             Q(orden_numero__isnull=False) & Q(inscripcion_numero__isnull=True) & Q(orden_fecha__isnull=False)
-        ).order_by("-orden_fecha", "orden_numero")[:5]
+        ).order_by("-orden_fecha", "orden_numero")
         # relevamientos
         context["relev_list"] = models.Expediente.objects.filter(fecha_medicion__isnull=False).order_by(
             "-fecha_medicion"
-        )[:5]
+        )
         # altas
-        context["open_list"] = models.Expediente.objects.filter(created__isnull=False).order_by("-created")[:10]
+        context["open_list"] = models.Expediente.objects.filter(created__isnull=False).order_by("-created")
         return context
 
 
